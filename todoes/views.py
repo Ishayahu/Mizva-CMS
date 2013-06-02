@@ -4,8 +4,8 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 import datetime
-from todoes.models import Note, Resource, File, Person, Task, ProblemByWorker, ProblemByUser, Categories, RegularTask, Activity
-from todoes.forms import NewTicketForm, NoteToTicketAddForm, UserCreationFormMY, TicketClosingForm, TicketConfirmingForm, TicketEditForm,TicketSearchForm, NewRegularTicketForm, EditRegularTicketForm, File_and_NoteToTicketAddForm
+from todoes.models import Note, File, Person, Client, Categories, Activity
+from todoes.forms import NewClientForm, NoteToTicketAddForm, UserCreationFormMY, TicketClosingForm, TicketConfirmingForm, TicketEditForm,TicketSearchForm, NewRegularTicketForm, EditRegularTicketForm, File_and_NoteToTicketAddForm
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -43,29 +43,34 @@ def new_ticket(request):
         fio = FioError
     method = request.method
     if request.method == 'POST':
-        form = NewTicketForm(request.POST)
+        form = NewClientForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            t=Task(name=data['name'], 
-                pbu=data['pbus'], 
-                description=data['description'], 
-                client=data['clients'], 
-                priority=data['priority'], 
-                category=data['category'], 
-                start_date=data['start_date'], 
-                when_to_reminder = data['start_date'],
-                due_date=data['due_date'], 
-                worker=data['workers'],
-                percentage=data['percentage'],
-                acl = data['clients'].login+';'+data['workers'].login)
-            t.save()
+            with_claim = False
+            if 'number' in data and data['number']:
+                m=Mezuza(number,
+                    date_of_claim=datetime.datetime.now(),
+                    payment=data['payment'],
+                    get_cash=data['get_cash'],
+                    date_of_payment=datetime.datetime.now())
+                m.save()
+                with_claim=True
+            c=Client(fio=data['fio'], 
+                    tel = data['tel'],
+                    mail = data['mail'],
+                    description = data['description'],
+                    entering_date = datetime.datetime.now())
+            c.save()
+            if with_claim:
+                c.mezuza.add(m)
+                c.save()
             # отправляем уведомление исполнителю по мылу
-            send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
-            set_last_activity(user,request.path)
+            #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
+            #set_last_activity(user,request.path)
             return HttpResponseRedirect('/tasks/')
     else:
-        form = NewTicketForm({'percentage':0,'start_date':datetime.datetime.now(),'due_date':datetime.datetime.now(),'priority':3})
-    set_last_activity(user,request.path)
+        form = NewClientForm()
+    #set_last_activity(user,request.path)
     return render_to_response('new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 
 @login_required
@@ -101,102 +106,7 @@ def new_regular_ticket(request):
         form = NewRegularTicketForm({'start_date':datetime.datetime.now(),'due_date':datetime.datetime.now(),'priority':3})
     set_last_activity(user,request.path)
     return render_to_response('new_regular_task.html', {'form':form, 'method':method},RequestContext(request))
-@login_required
-def edit_regular_task(request,task_to_edit_id):
-    if not acl(request,'regular',task_to_edit_id):
-        request.session['my_error'] = u'Нет права доступа к этой задаче!'
-        return HttpResponseRedirect("/tasks/")
-    user = request.user.username
-    try:
-        fio = Person.objects.get(login=user)
-    except Person.DoesNotExist:
-        fio = FioError()
-    task_to_edit = RegularTask.objects.get(id=task_to_edit_id)
-    method = request.method
-    if request.method == 'POST':
-        form = EditRegularTicketForm(request.POST)
-        # если меняется исполнитель - чтобы оповестить
-        old_worker = task_to_edit.worker
-        old_period = task_to_edit.period
-        old_client = task_to_edit.client
-        old_category = task_to_edit.category
-        old_stop_date = task_to_edit.stop_date
-        old_name = task_to_edit.name
-        if form.is_valid() and request.POST.get('cronized'):
-            data = form.cleaned_data
-            task_to_edit.description=data['description']
-            task_to_edit.client=data['clients']
-            task_to_edit.priority=data['priority']
-            task_to_edit.category=data['category'] 
-            task_to_edit.start_date=data['start_date']
-            task_to_edit.stop_date=data['stop_date']
-            task_to_edit.worker=data['workers']
-            task_to_edit.when_to_reminder=data['when_to_reminder']
-            task_to_edit.save()
-            if task_to_edit.period != old_period:
-                send_email(u"Изменёна периодичность выполонения задачи: "+task_to_edit.name,u"Старый срок:"+crontab_to_russian(period)+u"\nНовый срок:"+crontab_to_russian(task_to_edit.period)+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),[task_to_edit.worker.mail,task_to_edit.client.mail,old_worker.mail]+admins_mail)
-                
-            if task_to_edit.name != old_name:
-                send_email_alternative(u"Изменёно название задачи: "+old_name,
-                           u"Прежнее название:"+old_name+u"\nНовое название:"+task_to_edit.name+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.worker != old_worker:
-                # добавление нового исполнителя в acl
-                if task_to_edit.worker.login not in task_to_edit.acl:
-                    task_to_edit.acl=task_to_edit.acl+";"+task_to_edit.worker.login
-                    task_to_edit.save()
-                send_email_alternative(u"Изменён исполнитель задачи: "+task_to_edit.name,
-                           u"Прежний исполнитель:"+old_worker.fio+u"\nНовый исполнитель:"+task_to_edit.worker.fio+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail,old_worker.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.stop_date != old_stop_date:
-                send_email_alternative(u"Изменёна дата завершения регулярной задачи: "+task_to_edit.name,
-                           u"Прежная проблема:"+str(old_stop_date)+u"\nНовая проблема:"+str(task_to_edit.stop_date)+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.client != old_client:
-                # добавление нового исполнителя в acl
-                if task_to_edit.client.login not in task_to_edit.acl:
-                    task_to_edit.acl=task_to_edit.acl+";"+task_to_edit.client.login
-                    task_to_edit.save()
-                send_email_alternative(u"Изменён заказчик задачи: "+task_to_edit.name,
-                           u"Прежний заказчик:"+old_client.fio+u"\nНовый заказчик:"+task_to_edit.client.fio+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail,old_client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.category != old_category:
-                send_email_alternative(u"Изменёна категория задачи: "+task_to_edit.name,
-                           u"Прежная категория:"+old_category.name+u"\nНовая категория:"+task_to_edit.category.name+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.period != old_period:
-                send_email_alternative(u"Изменёна периодичность выполонения задачи: "+task_to_edit.name,
-                           u"Старый срок:"+crontab_to_russian(period)+u"\nНовый срок:"+crontab_to_russian(task_to_edit.period)+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )                
-            set_last_activity(user,request.path)
-            return HttpResponseRedirect('/tasks/')
-    else:
-        form = EditRegularTicketForm({'name' : task_to_edit.name,
-            'description' : task_to_edit.description,
-            'clients' : task_to_edit.client,
-            'priority' : task_to_edit.priority,
-            'category' : task_to_edit.category,
-            'start_date' : task_to_edit.start_date,
-            'when_to_reminder' : task_to_edit.when_to_reminder,
-            'stop_date' : task_to_edit.stop_date,
-            'workers' : task_to_edit.worker,
-        })
-    set_last_activity(user,request.path)
-    return render_to_response('new_regular_task.html', {'form':form, 'method':method,'period':task_to_edit.period,'russian_period':crontab_to_russian(task_to_edit.period)},RequestContext(request))
-
-    
+   
 @login_required
 def set_reminder(request,task_type,task_id):
     if not acl(request,task_type,task_id):
@@ -281,7 +191,7 @@ def profile(request):
     set_last_activity(user,request.path)
     return HttpResponseRedirect("/tasks/")
 @login_required
-def tasks(request):
+def clients(request):
     # получаем ошибку, если она установлена и сбрасываем её в запросах
     if request.session.get('my_error'):
         my_error = [request.session.get('my_error'),]
@@ -291,15 +201,7 @@ def tasks(request):
     user = request.user.username
     method = request.method
     if  request.method == 'POST':
-        for task_to_confirm_id in request.POST.getlist('task_to_confirm_id'):
-            task_to_confirm = Task.objects.get(id=int(task_to_confirm_id))
-            task_to_confirm.confirmed = True
-            task_to_confirm.confirmed_date = datetime.datetime.now()
-            task_to_confirm.save()
-            send_email(u"Завершение задачи подтверждено: "+task_to_confirm.name,u"\nОписание задачи:\n"+task_to_confirm.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_confirm.id),[task_to_confirm.worker.mail,task_to_confirm.client.mail])
-        request.session['my_error'] = u'Выполнение задач успешно подтверждено!'
-        set_last_activity(user,request.path)
-        return HttpResponseRedirect('/tasks/')
+        pass
     else:
         try:
             worker = Person.objects.get(login=user)
@@ -308,79 +210,27 @@ def tasks(request):
         # получаем заявки ДЛЯ человека
         # просроченные
         try:
-            # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-            # фильтр filter(start_date__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            # фильтр filter(when_to_reminder__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            tasks_overdue = Task.objects.filter(deleted = False).filter(worker=worker,percentage__lt=100).filter(due_date__lt=datetime.datetime.now()).filter(start_date__lt=datetime.datetime.now()).filter(when_to_reminder__lt=datetime.datetime.now())
+            # Получаем клиентов, у которых стоит напоминалка
+            clients_to_show = Client.objects.filter(deleted = False).filter(exit_date__isnull=True).filter(when_to_reminder__lt=datetime.datetime.now())
         except:
-            tasks_overdue = ''# если задач нет - вывести это в шаблон
-        # на сегодня
-        try:
-            # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-            # фильтр filter(start_date__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            # фильтр filter(when_to_reminder__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            tasks_for_today = Task.objects.filter(deleted = False).filter(worker=worker,percentage__lt=100).filter(due_date__year=datetime.datetime.now().year,due_date__month=datetime.datetime.now().month,due_date__day=datetime.datetime.now().day).filter(start_date__lt=datetime.datetime.now()).filter(when_to_reminder__lt=datetime.datetime.now())
-        except:
-            tasks_for_today = ''# если задач нет - вывести это в шаблон
-        # на будущее
-        try:
-            # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-            # фильтр filter(start_date__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            # фильтр filter(when_to_reminder__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            tasks_future = Task.objects.filter(deleted = False).filter(worker=worker,percentage__lt=100).filter(due_date__gt=datetime.datetime.now()).filter(start_date__lt=datetime.datetime.now()).filter(when_to_reminder__lt=datetime.datetime.now())
-        except:
-            tasks_future = ''# если задач нет - вывести это в шаблон
-        # получаем заявки ОТ человека
-        try:
-            # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-            try:
-                client = Person.objects.get(login=user)
-            except Person.DoesNotExist:
-                client = 'Нет такого пользователя'
-            my_tasks = Task.objects.filter(deleted = False).filter(client=client,percentage__lt=100)
-        except:
-            # если задач нет - вывести это в шаблон
-            my_tasks = ''# если задач нет - вывести это в шаблон
-            my_error.append('От Вас нет задач')
-        try:
-            # получаем активные регулярные задачи
-            # фильтр filter(start_date__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            # фильтр filter(when_to_reminder__lt=datetime.datetime.now()) удялет заявки, которые ещё не наступили
-            regular_tasks = RegularTask.objects.filter(deleted = False).filter(worker=worker).filter(next_date__lt=datetime.datetime.now()).filter(when_to_reminder__lt=datetime.datetime.now())
-        except:
-            regular_tasks = ''# если задач нет - вывести это в шаблон
-        
-        # получаем кол-во заявок в этот раз и сравниваем с тем, что было для уведомления всплывающим окном или ещё какой фигней
+            tasks_overdue = ''# если задач нет - вывести это в шаблон        
+        # получаем кол-во клиентов в этот раз и сравниваем с тем, что было для уведомления всплывающим окном или ещё какой фигней
         alert = False
-        if request.session.get('tasks_number'):
-            tasks_number_was = int(request.session.get('tasks_number'))
+        if request.session.get('clients_number'):
+            clients_number_was = int(request.session.get('clients_number'))
         else:
-            tasks_number_was = 999
-        tasks_number = sum(map(len,(tasks_overdue,tasks_for_today,tasks_future,regular_tasks)))
-        if tasks_number_was < tasks_number:
+            clients_number_was = 999
+        clients_number = len(clients_to_show)
+        if clients_number_was < clients_number:
             alert = True
-        request.session['tasks_number'] = tasks_number
+        request.session['clients_number'] = clients_number
         # только для админов
         admin = False
         if user in admins:
             admin = True
-            # получаем Список всех заявок для админов
-            try:
-                # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-                all_tasks = Task.objects.filter(deleted = False).filter(percentage__lt=100).exclude(client=client).exclude(worker=worker)#.order_by("priority")
-            except:
-                all_tasks = ''# если задач нет - вывести это в шаблон
-            # получаем заявки ДЛЯ ПОДТВЕРЖДЕНИЯ ЗАКРЫТИЯ если человек - админ
-            try:
-                # отображаем только НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-                tasks_to_confirm = Task.objects.filter(deleted = False).filter(percentage__exact=100).filter(confirmed__exact=False)
-            except:
-                tasks_to_confirm = ''# если задач нет - вывести это в шаблон
-                my_error.append('Нет неподтверждённых заявок')
-            set_last_activity(user,request.path)
-            return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'tasks_overdue':tasks_overdue,'tasks_for_today':tasks_for_today,'tasks_future':tasks_future,'my_tasks':my_tasks,'tasks_to_confirm':tasks_to_confirm,'all_tasks':all_tasks,'alert':alert,'admin':admin,'regular_tasks':regular_tasks},RequestContext(request))
-    set_last_activity(user,request.path)
-    return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'tasks_overdue':tasks_overdue,'tasks_for_today':tasks_for_today,'tasks_future':tasks_future,'my_tasks':my_tasks,'alert':alert,'regular_tasks':regular_tasks},RequestContext(request))
+            pass
+    #set_last_activity(user,request.path)
+    return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'tasks_overdue':clients_to_show,'alert':alert},RequestContext(request))
 @login_required
 def task(request,task_type,task_id):
 

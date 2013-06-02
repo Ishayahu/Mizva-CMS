@@ -14,12 +14,12 @@ admin.autodiscover()
 # admin.autodiscover()
 urlpatterns = patterns('',
     # просмотр задач
-    url(r'^tasks/$', todoes.views.tasks),
+    url(r'^/$', todoes.views.clients),
     # просмотр всех задач
     url(r'^all_task/$', todoes.views.all_tasks),
 
 # обычные задачи
-    url(r'^new_ticket/$', todoes.views.new_ticket),
+    url(r'^new_client/$', todoes.views.new_client),
     url(r'^edit/([^/]+)/$', todoes.views.edit_task),
     # закрытие / отмена закрытия заявки
     url(r'^close/([^/]+)/$', todoes.views.close_task),

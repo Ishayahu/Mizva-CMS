@@ -26,17 +26,20 @@ inp_f=( '%d-%m-%Y %H:%M:%S',     # '2006-10-25 14:30:59'
         '%d/%m/%y %H:%M:%S',     # '10/25/06 14:30:59'
         '%d/%m/%y %H:%M',        # '10/25/06 14:30'
         '%d/%m/%y',       )
-class NewTicketForm(forms.Form):
-    name = forms.CharField(max_length=140, label='Название заявки')
-    pbus = forms.ModelChoiceField(queryset  = ProblemByUser.objects.all(), label='Проблема со слов пользователя')
+class NewClientForm(forms.Form):
+    fio = forms.CharField(max_length=140, label='ФИО клиента')
     description = forms.CharField(widget=forms.Textarea, label='Описание')
-    clients = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Заявитель')
-    priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
-    category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
-    start_date = forms.DateTimeField(label='Дата создания заявки')
-    due_date = forms.DateTimeField(label='Предполагаемая дата завершения',input_formats=inp_f)
-    workers = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Исполнитель')
-    percentage = forms.DecimalField(min_value=0, max_value=100, label='Процент выполнения')
+    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
+    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
+    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
+    #entering_date = forms.DateTimeField(label='Дата внесения',input_formats=inp_f)
+    #exiting_date = forms.DateTimeField(label='Дата выхода из системы',input_formats=inp_f)
+    mail = forms.EmailField(label = 'Мыло',requreqd=False)
+    tel = forms.CharField(label='Телефон', max_length=10, min_length=10,requreqd=False)
+    number = forms.IntegerField(label='Количество заказанных мезузот',requreqd=False)
+    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
+    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',requreqd=False)
+    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',requreqd=False)
     
 class TicketEditForm(forms.Form):
     name = forms.CharField(max_length=140, label='Название заявки')

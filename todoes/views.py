@@ -213,7 +213,7 @@ def clients(request):
             # Получаем клиентов, у которых стоит напоминалка
             clients_to_show = Client.objects.filter(deleted = False).filter(exit_date__isnull=True).filter(when_to_reminder__lt=datetime.datetime.now())
         except:
-            tasks_overdue = ''# если задач нет - вывести это в шаблон        
+            clients_to_show = ''# если задач нет - вывести это в шаблон        
         # получаем кол-во клиентов в этот раз и сравниваем с тем, что было для уведомления всплывающим окном или ещё какой фигней
         alert = False
         if request.session.get('clients_number'):
@@ -230,7 +230,7 @@ def clients(request):
             admin = True
             pass
     #set_last_activity(user,request.path)
-    return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'tasks_overdue':clients_to_show,'alert':alert},RequestContext(request))
+    return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert},RequestContext(request))
 @login_required
 def task(request,task_type,task_id):
 

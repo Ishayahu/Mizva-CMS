@@ -306,7 +306,7 @@ def start_deploy_server(branch='', directory='',github='', project='',type_of_se
                 if type_of_server=='deploy':
                     make_and_send_settings(host='192.168.1.24',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
                 if type_of_server=='test':
-                    make_and_send_settings(host='',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
+                    make_and_send_settings(host='192.168.1.253',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
 	    # Запускаем сервер для проверки
 	    #run('python manage.py runserver 0.0.0.0:8080')
 	
@@ -327,7 +327,7 @@ def deploy_server(directory='', project='',type_of_server='',e_mail='',e_psswd='
                 if type_of_server=='deploy':
                     make_and_send_settings(host='192.168.1.24',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
                 if type_of_server=='test':
-                    make_and_send_settings(host='',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
+                    make_and_send_settings(host='192.168.1.253',port='5432',email_host='smtp.gmail.com',email_port='25',email_user=e_mail,email_password=e_psswd,where_to_place='~/tasks/tasks/')
 
 def commit_branch(branch=''):
     """

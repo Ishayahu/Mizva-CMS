@@ -52,9 +52,9 @@ class Mezuza(models.Model):
     get_cash = models.DecimalField(decimal_places=2, max_digits=8)
     date_of_payment = models.DateTimeField()
     def __unicode__(self):
-        return ";".join((self.fio,str(self.login)))
+        return ";".join((str(self.id),str(self.number),str(self.date_of_claim)))
     class Meta:
-        ordering = ['fio',]
+        ordering = ['date_of_claim',]
 class Client(models.Model):
     fio = models.CharField(max_length=140,blank = True, null = True)
     tel = models.CharField(max_length=10,blank = True, null = True)
@@ -70,15 +70,15 @@ class Client(models.Model):
     file = models.ManyToManyField(File, related_name = "for_client", blank = True, null = True)
     confirmed = models.BooleanField(default=False)
     confirmed_date = models.DateTimeField(blank = True, null = True)
-    children_client = models.ManyToManyField('Task',related_name = "parent_client",blank = True, null = True)
+    children_client = models.ManyToManyField('Client',related_name = "parent_client",blank = True, null = True)
     deleted = models.BooleanField(default=False)
     acl = models.TextField(default=False)
     # Мивцы
     mezuza = models.ManyToManyField('Mezuza',related_name = "for_client", blank=True, null=True)
     def __unicode__(self):
-        return u";".join((str(self.id),self.name,"\t"+self.worker.fio))
+        return u";".join((str(self.id),self.fio,"\t"+self.tel))
     class Meta:
-        ordering = ['priority','due_date']
+        ordering = ['fio','entering_date']
 
 class Activity(models.Model):
     login = models.CharField(max_length=140, blank = True, null = True)

@@ -4,7 +4,12 @@
 from django.db import models
 
 # Create your models here.
-
+class Categories(models.Model):
+    name = models.TextField()
+    def __unicode__(self):
+        # return u';'.join((str(self.id),self.name))
+        return self.name
+    
 class Note(models.Model):
     timestamp = models.DateTimeField()
     note = models.TextField()

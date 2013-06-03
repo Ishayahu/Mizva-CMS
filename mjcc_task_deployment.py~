@@ -34,9 +34,9 @@ from fabric.contrib.console import confirm
 env.passwords={'ishayahu@192.168.1.25':'aA111111','ishayahu@192.168.1.214':'aA111111'}
 env.shell='/bin/csh -c'
 # папка с fab файлом
-deployment_folder = '/usr/home/ishayahu/docsrv/scripts/MJCC-tasks/'
+deployment_folder = '/usr/home/ishayahu/docsrv/scripts/Vil-mezuza/'
 # папка с исходниками в локальном git репозитории
-source_folder = '/usr/home/ishayahu/docsrv/scripts/MJCC-tasks/'
+source_folder = '/usr/home/ishayahu/docsrv/scripts/Vil-mezuza/'
 # Сервера для выполнения задачи
 servers= {'test':['ishayahu@192.168.1.214',],
           'deploy' : ['ishayahu@192.168.1.25',]

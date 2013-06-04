@@ -3,7 +3,7 @@
 
 from django.conf.urls.defaults import patterns, include, url
 import todoes.views 
-import assets.views
+#import assets.views
 from django.contrib import admin
 from django.contrib.auth.views import login, logout
 from django.conf import settings
@@ -15,8 +15,9 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # просмотр задач
     url(r'^/$', todoes.views.clients),
+   url(r'^$', todoes.views.clients),
     # просмотр всех задач
-    url(r'^all_task/$', todoes.views.all_tasks),
+    url(r'^all_clients/$', todoes.views.all_clients),
 
 # обычные задачи
     url(r'^new_client/$', todoes.views.new_client),
@@ -29,12 +30,8 @@ urlpatterns = patterns('',
 # повторяющиеся задачи    
     # создание повторяющейся задачи
     url(r'^new_regular_ticket/$', todoes.views.new_regular_ticket),
-    # редактирование повторяющейся задачи
-    url(r'^edit_regular/([^/]+)/$', todoes.views.edit_regular_task),
-    # отметка как сделанная повторяющейся задачи
-    url(r'^regular_task_done/([^/]+)/$', views.regular_task_done),
 # общее для всех задач    
-    url(r'^task/([^/]+)/(\d+)/$', todoes.views.task),
+    url(r'^client/(\d+)/$', todoes.views.client),
     # установка напоминалки повторяющейся задачи
     # удаление повторяющейся задачи
     url(r'^deleted_tasks/$', todoes.views.deleted_tasks),
@@ -60,11 +57,10 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', todoes.views.tasks),
 
 # Работа с активами
     # Добавление актива
-    url(r'^assets/add/([^/]+)/$', assets.views.asset_add),
+    #url(r'^assets/add/([^/]+)/$', assets.views.asset_add),
 )
 if settings.DEBUG:
     urlpatterns += patterns('',

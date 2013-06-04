@@ -50,7 +50,7 @@
       </script>
 {% endblock %}
 {% block content %}
-    <p class="leftstr"><a href="/tasks/">К списку задач</a></p>
+    <p class="leftstr"><a href="/">На главную</a></p>
     <p class="rightstr">Привет, {{ fio.fio }}!</p>
     {% if my_error %}
         {% for error in my_error %}
@@ -66,37 +66,18 @@
     <tr>
         <td>
             <table border=1>
-            <tr><th colspan="2">Выбранная задача: {{task.name}}</th></tr>
-                <td>Заказчик</td><td>{{task.client.fio}};{{task.client.tel}}</td></tr>
-                <td>Категория</td><td>{{task.category}}</td></tr>
-                <td>Исполнитель</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
-                <td>Приоритет</td><td>{{task.priority}}</td></tr>
-                <td>Дата создания</td><td>{{task.start_date}}</td></tr>
-                <td>Дата напоминания</td><td>{{task.when_to_reminder}}</td></tr>
-                {% ifequal task_type 'one_time' %}
-                    <td>Предполагаемая дата завершения</td><td>{{task.due_date}}</td></tr>
-                    <td>Проблема со слов пользователя</td><td>{{task.pbu}}</td></tr>
-                {% endifequal %}
-                {% ifequal task_type 'regular' %}
-                    <td>Дата следующей задачи</td><td>{{task.next_date}}</td></tr>
-                    <td>Периодичность задачи</td><td><a title="В crontab стиле" href='http://www.opennet.ru/man.shtml?topic=crontab&category=5&russian=0'>{{task.period}}</a><br />{{task.russian_period}}</td></tr>
-                {% endifequal %}
+            <tr><th colspan="2">Выбранный клиент: {{task.fio}}</th></tr>
+                <tr><td>Телефон</td><td>{{task.tel}}</td></tr>
+                <tr><td>Почта</td><td>{{task.mail}}</td></tr>
+                <tr><td>Исполнитель</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
+                {% <tr><td>Приоритет</td><td>{{task.priority}}</td></tr> %}
+                <tr><td>Дата добавления</td><td>{{task.entering_date}}</td></tr>
+                <tr><td>Дата напоминания</td><td>{{task.when_to_reminder}}</td></tr>
             </table>
-                {% ifequal task_type 'one_time' %}
-                    <p><a href="/edit/{{task.id}}">Редактировать описание задачи</a></p>
-                {% endifequal %}
-                {% ifequal task_type 'regular' %}
-                    <p><a href="/edit_regular/{{task.id}}">Редактировать описание задачи</a></p>
-                {% endifequal %}
-            
-            <p><a href="/add_children_task/one_time/{{task.id}}">Добавить дочернюю задачу</a></p>
-                {% ifequal task_type 'one_time' %}
-                    <p><form action="/delete/one_time/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Удалить задачу" name="close_task" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
-                {% endifequal %}
-                {% ifequal task_type 'regular' %}
-                    <p><form action="/delete/regular/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Удалить задачу" name="close_task" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
-                {% endifequal %}
-            <p><a href="/close/{{task.id}}">Закрыть задачу</a></p>
+                <p><a href="/edit/{{task.id}}">Редактировать описание клиента</a></p>
+                <p><a href="/add_children_task/one_time/{{task.id}}">Добавить дочернего клиента</a></p>
+
+                <p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Удалить клиента" name="del_client" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
 
         </td>
         <td>
@@ -135,19 +116,12 @@
                                         <td colspan=2><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="Сохранить комментарий" name="save_edited_comment" /></td>
                                     {% endifequal %}
                                     {% ifnotequal note.id note_to_edit_id %}
-                                        <td><input type="submit" value="&#9998;" title="Редактировать комментарий" name="edit_comment" />
-                                        <input type="hidden" name="num" value="{{note.id}}" />
-                                        <input type="submit" value="&#10005;" title="Удалить комментарий" name="del_comment" /><div id="answer_to_note_{{note.id}}">
-                                        <input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/></div></td>
+                                        <td><input type="submit" value="&#9998;" title="Редактировать комментарий" name="edit_comment" /><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="&#10005;" title="Удалить комментарий" name="del_comment" /><div id="answer_to_note_{{note.id}}"><input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/></div></td>
                                     {% endifnotequal %}
                                 {% endifequal %}
                                 {# Если не автор комментария - только отвечать &#9997; #}
                                 {% ifnotequal note.author.login fio.login %}
                                     <td><div id="answer_to_note_{{note.id}}"><input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" /></div></td>
-                                        {% if admin %}
-					    <input type="hidden" name="num" value="{{note.id}}" />
-					    <input type="submit" value="&#10005;" title="Удалить комментарий" name="del_comment" /><div id="answer_to_note_{{note.id}}">      
-					{% endif %}
                                 {% endifnotequal %}
                             </form>
                         </tr>

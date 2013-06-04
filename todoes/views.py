@@ -4,8 +4,8 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 import datetime
-from todoes.models import Note, File, Person, Client, Categories, Activity
-from todoes.forms import NewClientForm, NoteToTicketAddForm, UserCreationFormMY, TicketClosingForm, TicketConfirmingForm, TicketEditForm,TicketSearchForm, NewRegularTicketForm, EditRegularTicketForm, File_and_NoteToTicketAddForm
+from todoes.models import Note, File, Person, Client, Categories, Activity, Mezuza
+from todoes.forms import NewClientForm,ClientSearchForm,NoteToClientAddForm,UserCreationFormMY
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -21,13 +21,13 @@ from djlib.user_tracking import set_last_activity_model, get_last_activities
 from djlib.mail_utils import send_email_alternative
 from djlib.error_utils import FioError
 
-from user_settings import server_ip, admins, admins_mail
-from user_settings import todoes_url_not_to_track as url_not_to_track
-from user_settings import todoes_url_one_record as url_one_record
+from user_settings.settings import server_ip, admins, admins_mail
+from user_settings.settings import todoes_url_not_to_track as url_not_to_track
+from user_settings.settings import todoes_url_one_record as url_one_record
 
 from todoes.utils import build_note_tree, note_with_indent
 
-task_types = {'one_time':Task,'regular':RegularTask}
+#task_types = {'one_time':Task,'regular':RegularTask}
 task_addr = {'one_time':'one_time','regular':'regular'}
 
 
@@ -35,7 +35,7 @@ def set_last_activity(login,url):
     set_last_activity_model(login,url,url_not_to_track,url_one_record)
 
 @login_required
-def new_ticket(request):
+def new_client(request):
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
@@ -48,7 +48,7 @@ def new_ticket(request):
             data = form.cleaned_data
             with_claim = False
             if 'number' in data and data['number']:
-                m=Mezuza(number,
+                m=Mezuza(number=data['number'],
                     date_of_claim=datetime.datetime.now(),
                     payment=data['payment'],
                     get_cash=data['get_cash'],
@@ -67,7 +67,7 @@ def new_ticket(request):
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             #set_last_activity(user,request.path)
-            return HttpResponseRedirect('/tasks/')
+            return HttpResponseRedirect('/')
     else:
         form = NewClientForm()
     #set_last_activity(user,request.path)
@@ -101,7 +101,7 @@ def new_regular_ticket(request):
             # отправляем уведомление исполнителю по мылу
             send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             set_last_activity(user,request.path)
-            return HttpResponseRedirect('/tasks/')
+            return HttpResponseRedirect('/')
     else:
         form = NewRegularTicketForm({'start_date':datetime.datetime.now(),'due_date':datetime.datetime.now(),'priority':3})
     set_last_activity(user,request.path)
@@ -181,7 +181,7 @@ def register(request):
                 login = data['username']
             )
             new_person.save()
-            return HttpResponseRedirect("/tasks/")
+            return HttpResponseRedirect("/")
     else:
         form = UserCreationFormMY()
     return render_to_response("registration/register.html",{'form':form},RequestContext(request))
@@ -232,11 +232,11 @@ def clients(request):
     #set_last_activity(user,request.path)
     return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert},RequestContext(request))
 @login_required
-def task(request,task_type,task_id):
+def client(request,client_id):
 
-    if not acl(request,task_type,task_id):
-        request.session['my_error'] = u'Нет права доступа к этой задаче!'
-        return HttpResponseRedirect("/tasks/")
+    #if not acl(request,task_type,task_id):
+    #    request.session['my_error'] = u'Нет права доступа к этой задаче!'
+    #    return HttpResponseRedirect("/tasks/")
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
@@ -244,12 +244,9 @@ def task(request,task_type,task_id):
         fio = FioError()
     try:
         # есть ли здача или она уже удалена?
-        task_full = task_types[task_type].objects.get(id=task_id)
+        client_full = Client.objects.get(id=client_id)
         try:
-            if task_type == 'one_time':
-                tmp_notes = Note.objects.filter(for_task=task_full).order_by('-timestamp')
-            if task_type == 'regular':
-                tmp_notes = Note.objects.filter(for_regular_task=task_full).order_by('-timestamp')
+            tmp_notes = Note.objects.filter(for_client=client_full).order_by('-timestamp')
         except Note.DoesNotExist:
             tmp_notes = ('Нет подходящих заметок',)
         notes=[]
@@ -257,12 +254,10 @@ def task(request,task_type,task_id):
             notes.append(note_with_indent(note,0))
             build_note_tree(note,notes,1)
         # подготовка к выводу
-        task_full.html_description = htmlize(task_full.description)
-        if task_type=='regular':
-            task_full.russian_period = crontab_to_russian(task_full.period)
+        client_full.html_description = htmlize(client_full.description)
         method = request.method
         if request.method == 'POST':
-            form = NoteToTicketAddForm(request.POST)
+            form = NoteToClientAddForm(request.POST)
             if form.is_valid():
                 data = form.cleaned_data
                 if request.POST.get('add_comment'):
@@ -272,20 +267,17 @@ def task(request,task_type,task_id):
                         author = fio
                     )
                     note.save()
-                    if task_type == 'one_time':
-                        note.for_task.add(task_full)
-                    if task_type == 'regular':
-                        note.for_regular_task.add(task_full)
+                    note.for_client.add(client_full)
                     note.save()
-                    mails = [person.mail for person in data['workers']]
-                    acl_list = task_full.acl.split(';')
-                    for person in data['workers']:
-                        if person.login not in acl_list:
-                            acl_list.append(person.login)
-                    task_full.acl = ';'.join(acl_list)
-                    task_full.save()
-                    send_email_alternative(u"Новый комментарий к задаче: "+task_full.name,note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://1"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
-                    set_last_activity(user,request.path)
+                    #mails = [person.mail for person in data['workers']]
+                    #acl_list = client_full.acl.split(';')
+                    #for person in data['workers']:
+                    #    if person.login not in acl_list:
+                    #        acl_list.append(person.login)
+                    #client_full.acl = ';'.join(acl_list)
+                    #client_full.save()
+                    #send_email_alternative(u"Новый комментарий к задаче: "+task_full.name,note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://1"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
+                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
                 elif request.POST.get('answer_to_comment'):
                     parent_note = Note.objects.get(id=int(request.POST.get('to_note')))
@@ -297,47 +289,68 @@ def task(request,task_type,task_id):
                     note.save()
                     note.parent_note.add(parent_note)
                     note.save()
-                    mails = (parent_note.author.mail if parent_note.author.mail else '' ,)
-                    send_email_alternative(u"Ответ на ваш комментарий к задаче: "+task_full.name,u"Ваш комментарий:\n"+parent_note.note+u"\nОтветили:\n"+note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
-                    set_last_activity(user,request.path)
+                    #mails = (parent_note.author.mail if parent_note.author.mail else '' ,)
+                    #send_email_alternative(u"Ответ на ваш комментарий к задаче: "+task_full.name,u"Ваш комментарий:\n"+parent_note.note+u"\nОтветили:\n"+note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
+                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
                 elif request.POST.get('del_comment'):
                     note_to_del_id=request.POST.get('num')
                     note_to_del = Note.objects.get(id=note_to_del_id)
+                    # Если есть дочерние комментарии - прикрепить к родительской заметке или к задаче
+                    children_note=''
+                    parent_note=''
+                    try:
+                        children_note = note_to_del.children_note.get()
+                    except Note.DoesNotExist:
+                        pass
+                    try:
+                        parent_note= note_to_del.parent_note.get()
+                    except Note.DoesNotExist:
+                        pass
+                    # Если есть дочерний комментарий - работаем
+                    if children_note:
+                        # Если есть родительский комментарий - прикрепляем к нему
+                        if parent_note:
+                            parent_note.children_note.add(children_note)
+                            parent_note.save()
+                        # Если родительского комментария нет - прикрепляем к задаче
+                        else:
+                            children_note.for_client.add(client_full)
+                            children_note.save()
                     note_to_del.delete()
-                    set_last_activity(user,request.path)
+                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
                 elif request.POST.get('edit_comment'):
                     note_to_edit_id = request.POST.get('num')
                     for note in notes:
                         if note.id != int(note_to_edit_id):
                             note.note = htmlize(note.note)
-                    set_last_activity(user,request.path)
-                    return render_to_response('task.html',{'user':user,'fio':fio,'task':task_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id),'task_type':task_type},RequestContext(request))
+                    #set_last_activity(user,request.path)
+                    return render_to_response('task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id)},RequestContext(request))
                 elif request.POST.get('save_edited_comment'):
                     note_to_edit_id = request.POST.get('num')
                     note_to_edit = Note.objects.get(id=note_to_edit_id)
                     old_comment = note_to_edit.note
                     note_to_edit.note = request.POST.get('text_note_to_edit')
                     note_to_edit.save()
-                    send_email_alternative(u"Отредактирован комментарий к задаче: "+task_full.name,u"Старый комментарий:"+old_comment+u"\nНовый комментарий"+note_to_edit.note+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),[task_full.worker.mail,task_full.client.mail],fio)
-                    set_last_activity(user,request.path)
+                    #send_email_alternative(u"Отредактирован комментарий к задаче: "+task_full.name,u"Старый комментарий:"+old_comment+u"\nНовый комментарий"+note_to_edit.note+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),[task_full.worker.mail,task_full.client.mail],fio)
+                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
 
         else:
-            form = NoteToTicketAddForm(defaults = (task_full.worker.fio, task_full.client.fio),exclude = (fio,))
+            form = NoteToClientAddForm()
             for note in notes:
                 note.note = htmlize(note.note)
-            set_last_activity(user,request.path)
-            return render_to_response('task.html',{'user':user,'fio':fio,'task':task_full,'notes':notes, 'form':form,'task_type':task_type},RequestContext(request))
+            #set_last_activity(user,request.path)
+            return render_to_response('task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form},RequestContext(request))
     # если задачи нет - возвращаем к списку с ошибкой
-    except Task.DoesNotExist:
+    except Client.DoesNotExist:
         # print 'here'
         # return tasks(request, my_error=u'Такой задачи нет. Возможно она была уже удалена')
-        request.session['my_error'] = u'Такой задачи нет. Возможно она была уже удалена'
-        return HttpResponseRedirect('/tasks/')
+        request.session['my_error'] = u'Такого клиента нет. Возможно он был удалён'
+        return HttpResponseRedirect('/')
     # никогда не выполняется. нужно только для проформы
-    return HttpResponseRedirect("/tasks/")
+    return HttpResponseRedirect("/")
 
 @login_required
 def close_task(request,task_to_close_id):
@@ -629,34 +642,48 @@ def send_email(subject,message,to):
     send_mail(subject,message,"meoc-it@mail.ru",good_mails)
 
 @login_required
-def all_tasks(request):
+def all_clients(request):
+    def find_parent_task(note):
+        """
+        Поиск родительской заявки для примечания
+        """
+        try:
+            if note.parent_note:
+                return find_parent_task(note.parent_note.get())
+        except Note.DoesNotExist:
+            return Client.objects.filter(note = note)
     user = request.user.username
     not_finded = False
-    finded_tasks = False
+    finded_tasks = ''
     method = request.method
     if request.method == 'POST':
-        form = TicketSearchForm(request.POST)
+        form = ClientSearchForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            finded_client_notes=''
+            finded_client_names=''
+            finded_client_desc=''
             try:
-                finded_tasks_names = Task.objects.filter(name__icontains = data['name'])
-                finded_tasks_desc = Task.objects.filter(description__icontains = data['name'])
-                finded_rtasks_names = RegularTask.objects.filter(name__icontains = data['name'])
-                finded_rtasks_desc = RegularTask.objects.filter(description__icontains = data['name'])
-                notes = Note.objects.filter(note__icontains = data['name'])
-                for note in notes:
-                    finded_tasks_notes = Task.objects.filter(note = note)
-                    finded_rtasks_notes = RegularTask.objects.filter(note = note)
-                finded_tasks = list(chain(finded_tasks_names, finded_tasks_desc, finded_rtasks_names,finded_rtasks_desc,finded_tasks_notes,finded_rtasks_notes))
-                if not finded_tasks:
-                    not_finded = True
+                finded_client_names = Client.objects.filter(fio__icontains = data['name'])
             except:
-                print 'exception'
+                pass
+            try:
+                finded_client_desc = Client.objects.filter(description__icontains = data['name'])
+            except:
+                pass
+            try:
+                notes = Note.objects.filter(note__icontains = data['name'])
+            except:
+                pass
+            for note in notes:
+                finded_client_notes = find_parent_task(note = note)
+            finded_clients = list(chain(finded_client_names, finded_client_desc, finded_client_notes))
+            if not finded_clients:
                 not_finded = True
-            set_last_activity(user,request.path)
-            return render_to_response('all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_tasks,'form':form, 'method':method},RequestContext(request))
+            #set_last_activity(user,request.path)
+            return render_to_response('all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method},RequestContext(request))
     else:
-        form = TicketSearchForm()
+        form = ClientSearchForm()
         if request.session.get('my_error'):
             my_error = [request.session.get('my_error'),]
         else:
@@ -664,27 +691,11 @@ def all_tasks(request):
         request.session['my_error'] = ''
         try:
             # отображаем все НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
-            tasks = Task.objects.filter(deleted = False).filter(percentage__lt=100)
+            clients = Client.objects.filter(deleted = False)
         except:
             tasks = ''# если задач нет - вывести это в шаблон
-        try:
-            # отображаем все повторяющиеся задачи
-            regular_tasks = RegularTask.objects.filter(deleted = False)
-        except:
-            regular_tasks = ''# если задач нет - вывести это в шаблон
-        try:
-            # отображаем все закрытые заявки не подтверждённые
-            closed_tasks = Task.objects.filter(deleted = False).filter(percentage__exact=100).filter(confirmed__exact=False)
-        except:
-            closed_tasks = ''# если задач нет - вывести это в шаблон
-            # my_error.append('Для Вас нет задач')
-        try:
-            # отображаем все подтверждённые заявки
-            confirmed_tasks = Task.objects.filter(deleted = False).filter(confirmed__exact=True)
-        except:
-            confirmed_tasks = ''# если задач нет - вывести это в шаблон
-    set_last_activity(user,request.path)
-    return render_to_response('all_tasks.html', {'my_error':my_error,'tasks':tasks,'closed_tasks':closed_tasks,'confirmed_tasks':confirmed_tasks,'regular_tasks':regular_tasks,'form':form, 'method':method},RequestContext(request))
+    #set_last_activity(user,request.path)
+    return render_to_response('all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method},RequestContext(request))
 @login_required
 def add_children_task(request,parent_task_type,parent_task_id):
     method = request.method

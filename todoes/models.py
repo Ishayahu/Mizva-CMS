@@ -46,11 +46,11 @@ class Person(models.Model):
 class Mezuza(models.Model):
     number = models.IntegerField()
     date_of_claim = models.DateTimeField()
-    date_of_installation = models.DateTimeField()
-    worker = models.ForeignKey(Person)
+    date_of_installation = models.DateTimeField(blank = True, null = True)
+    worker = models.ForeignKey(Person, blank = True, null = True)
     payment = models.DecimalField(decimal_places=2, max_digits=8)
-    get_cash = models.DecimalField(decimal_places=2, max_digits=8)
-    date_of_payment = models.DateTimeField()
+    get_cash = models.DecimalField(decimal_places=2, max_digits=8, blank = True, null = True)
+    date_of_payment = models.DateTimeField(blank = True, null = True)
     def __unicode__(self):
         return ";".join((str(self.id),str(self.number),str(self.date_of_claim)))
     class Meta:

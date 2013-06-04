@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 # coding=<utf8>
 
+from todoes.models import Note
 # метод постороения дерева заметок
 def build_note_tree(root_note,notes,current_indent):
     childrens = Note.objects.filter(parent_note=root_note).order_by('timestamp')

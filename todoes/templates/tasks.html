@@ -27,7 +27,7 @@
 		return false;
 	    }
 	    if ((e.ctrlKey && e.altKey && e.keyCode == 'N'.charCodeAt(0))) {
-		window.open("/new_ticket/",'_blank');
+		window.open("/new_client/",'_blank');
 		return false;
 	    }
 	}
@@ -49,6 +49,7 @@
             <h2>{{error}}</h2><br />
         {% endfor %}
     {% endif %}
+     <p align="center"><a href="/new_client/">Добавить клиента</a></p>
     <table>
         <tr>
             <th>Активные клиенты</th>
@@ -87,7 +88,7 @@
                 {% endif %}
             </td>
             <td>
-                <p align="center"><a href="/new_client/">Добавить клиента</a></p>
+               
             </td>
         </tr>
     </table>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from todoes.models import Note,  File, Client, Categories, Person
+from todoes.models import Note,  File, Client, Categories, Person, Mezuza, Tfilin, Bdikot, Claim
 
 class WorkerAdmin(admin.ModelAdmin):
     list_display = ('fio','login','tel','mail','raiting')
@@ -18,3 +18,7 @@ admin.site.register(File)
 admin.site.register(Person, WorkerAdmin)
 admin.site.register(Categories)
 admin.site.register(Client)
+admin.site.register(Claim)
+admin.site.register(Tfilin)
+admin.site.register(Bdikot)
+admin.site.register(Mezuza)

@@ -16,7 +16,8 @@ PRIORITY_CHOICES = (
 inp_f=( '%d-%m-%Y %H:%M:%S',     # '2006-10-25 14:30:59'
         '%d-%m-%Y %H:%M',        # '2006-10-25 14:30'
         '%Y-%m-%d %H:%M:%S',     # '2006-10-25 14:30'
-        '%d-%m-%Y',              # '2006-10-25'
+        '%d-%m-%Y',              # '25-10-2025'
+        '%Y-%m-%d',              # '2006-10-25'
         '%d/%m/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
         '%d/%m/%Y %H:%M',        # '10/25/2006 14:30'
         '%d/%m/%Y',              # '10/25/2006'
@@ -39,6 +40,32 @@ class NewClientForm(forms.Form):
     #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
     payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
     get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
+class EditClientForm(forms.Form):
+    fio = forms.CharField(max_length=140, label='ФИО клиента')
+    description = forms.CharField(widget=forms.Textarea, label='Описание')
+    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
+    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
+    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
+    entering_date = forms.DateTimeField(label='Дата внесения',input_formats=inp_f)
+    exiting_date = forms.DateTimeField(label='Дата выхода из системы',input_formats=inp_f,required=False)
+    mail = forms.EmailField(label = 'Мыло',required=False)
+    tel = forms.CharField(label='Телефон', max_length=10, min_length=10,required=False)
+class NewClaimForm(forms.Form):
+    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
+    number = forms.IntegerField(label='Количество заказанных мезузот')
+    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
+    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
+class EditClaimForm(forms.Form):
+    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
+    number = forms.IntegerField(label='Количество заказанных мезузот')
+    date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
+    date_of_installation = forms.DateTimeField(label='Дата установки мезузы',input_formats=inp_f,required=False)
+    seller = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Продавец')
+    worker = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Установщик',required=False)
+    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
+    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
+    date_of_payment = forms.DateTimeField(label='Дата последнего внесения денег',input_formats=inp_f)
+ 
 class ClientSearchForm(forms.Form):
     name = forms.CharField(max_length=140, label='Строка для поиска')
 class NoteToClientAddForm(forms.Form):

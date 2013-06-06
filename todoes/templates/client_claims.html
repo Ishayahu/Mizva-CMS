@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}
+    История заказов: {{task.fio}}
+{% endblock %}
+{% block style %}
+    <style>
+       .leftstr, .rightstr {
+        float: left; /* Обтекание справа */ 
+        width: 50%; /* Ширина текстового блока */ 
+       }
+       .rightstr {
+        text-align: right; /* Выравнивание по правому краю */ 
+       }
+       .author {
+        text-align: right; /* Выравнивание по правому краю */ 
+        width: 100%;
+       }
+    </style>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script>
+        var m=1
+        var t=1
+        function new_claim() {
+            $("#new_claim").show()
+        }
+        function div_remove(id){
+            $(id).remove()
+        }
+        function new_mezuza(){
+            claim_content= $("#claim_content")
+            //var html = claim_content.html();
+            var html=''
+            html+='<div id="mezuza_'+m+'">Мезуза №'+m+': <label>Описание/Место<input type="text" name="mezuza_desc_'+m+'"></label>\n';
+            html+='<label>Исполнитель<select name="mezuza_worker_'+m+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Цена<input type="number" name="mezuza_payment_'+m+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_mezuzot").attr("value",m)
+            m++;
+        }
+        function new_tfilin(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            html+='<div id="tfilin_'+m+'">Тфилин №'+t+': <label>Описание/Место<input type="text" name="mezuza_desc_'+t+'"></label>\n';
+            html+='<label>Исполнитель<select name="mezuza_worker_'+t+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Цена<input type="number" name="mezuza_payment_'+t+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_tfilins").attr("value",t)
+            t++;
+        }
+        function bdikot(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            {% for item in mezuzas %}
+                 html+='<label>Мезуза {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}'"></label>\n';
+                 html+='<label>Цена<input type="number" name="mezuza_{{item.id}}_payment"></label>\n<br />';
+            {% endfor %}
+            {% for item in tfilins %}
+                 html+='<label>Мезуза {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}'"></label>\n';
+                 html+='<label>Цена<input type="number" name="mezuza_{{item.id}}_payment"></label>\n<br />';            
+            {% endfor %}
+            html+='<label>Исполнитель<select name="mezuza_worker_'+t+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            
+            //claim_content.html(html);
+            claim_content.append(html);
+            t++;
+        }
+        function isNumber(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n) && parseFloat(n)>=0;
+        }
+        
+        $(document).ready(function(){
+            $('#myform').bind('submit', function(event) {
+                $('[type=number]').each(function() {
+                        $(this).css('border', '1px solid black');
+                });
+                $('[type=number]').each(function() {
+                    if(!isNumber($(this).val())) {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid red');
+                    }
+                });
+                $('[type=text]').each(function() {
+                        $(this).css('border', '1px solid black');
+                });
+                $('[type=text]').each(function() {
+                    if($(this).val()=='') {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid red');
+                    }
+                });
+            });
+        });
+        
+    </script>
+{% endblock %}
+{% block content %}
+    <p class="leftstr"><a href="/">На главную</a></p>
+    <p class="rightstr">Привет, {{ fio.fio }}!</p>
+ 
+    <input type="button" title='Добавить новый заказ' onclick='new_claim()' value="Новый заказ" />
+    <div id="new_claim" style="display: none;">
+        <div class='error'></div>
+        <input type="button" title='Добавить мезузу' onclick='new_mezuza()' value="+Мезуза" />
+        <input type="button" title='Добавить тфилин' onclick='new_tfilin()' value="+Тфилин" />
+        {% if can_bdika %}
+            <input type="button" title='Добавить проверки' onclick='bdikot()' value="+Проверки" />
+        {% endif %}
+        <form action="" method='post' id='myform'>
+            {% csrf_token %}
+            <div id='claim_content'>
+            
+            </div>
+            <input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
+            <input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
+            <label>Скидка<input type="number" name="discount" value=0></label>
+            <input type="submit" value="Готово" name="done" />
+        </form>
+    </div>
+    <br />
+    <table border=1>
+        <tr>
+            <th>Дата заказа</th>
+            <th>Описание</th>
+            <th>Стоимость</th>
+            <th>Оплачено</th>
+            <th></th>
+        </tr>
+        {% for claim in claims %}
+            <tr>
+                <td>{{claim.date_of_claim}}</td>
+                <td>{{claim.description}}</td>
+                <td>{{claim.payment}}</td>
+                <td>{{claim.get_cash}}</td>
+                <td>
+                    <a href="/print/payment/{{claim.id}}" target="_blank" title="Печатать чек">&#12212;</a>
+                    <a href="/edit_payment/{{claim.id}}" title="Редактировать">&#9998;</a>
+                    {# <a href="/debt/{{claim.id}}" title='Оплата долга' onclick='if (a = prompt("Введите сумму доплаты","{{claim.rest_cash}}")) {window.location.replace("/debt/4/"+a)} else {return false}'>$</a> #}
+                    <input type="button" title='Оплата долга' onclick='if (a = prompt("Введите сумму доплаты","{{claim.rest_cash}}")) {window.location.replace("/debt/{{claim.id}}/"+a)} else {return false}' value="$" />
+                </td>
+            </tr>
+         {% endfor %}
+    </table>
+
+{% endblock %}

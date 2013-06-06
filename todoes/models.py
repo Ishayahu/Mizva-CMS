@@ -44,17 +44,48 @@ class Person(models.Model):
     class Meta:
         ordering = ['fio',]
 class Mezuza(models.Model):
-    number = models.IntegerField()
-    date_of_claim = models.DateTimeField()
-    date_of_installation = models.DateTimeField(blank = True, null = True)
-    worker = models.ForeignKey(Person, blank = True, null = True)
+    description = models.CharField(max_length=200,blank = True, null = True)
+    date_of_last_check = models.DateTimeField(blank = True, null = True)
+    seller = models.ForeignKey(Person, blank = True, null = True, related_name = "seller_for_mezuza")
+    worker = models.ForeignKey(Person, blank = True, null = True, related_name = "worker_for_mezuza")
+    owner = models.ForeignKey('Client', blank = True, null = True, related_name = "owner_for_mezuza")
     payment = models.DecimalField(decimal_places=2, max_digits=8)
+    gniza=models.BooleanField(default=False)
+    def __unicode__(self):
+        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+    class Meta:
+        ordering = ['owner','date_of_last_check',]
+class Tfilin(models.Model):
+    description = models.CharField(max_length=200,blank = True, null = True)
+    date_of_last_check = models.DateTimeField(blank = True, null = True)
+    seller = models.ForeignKey(Person, blank = True, null = True, related_name = "seller_for_tfilin")
+    worker = models.ForeignKey(Person, blank = True, null = True, related_name = "worker_for_tfilin")
+    owner = models.ForeignKey('Client', blank = True, null = True, related_name = "owner_for_tfilin")
+    payment = models.DecimalField(decimal_places=2, max_digits=8)
+    gniza=models.BooleanField(default=False)
+    def __unicode__(self):
+        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+    class Meta:
+        ordering = ['owner','date_of_last_check',]
+class Bdikot(models.Model):
+    of_what = models.TextField()
+    date_of_bdika = models.DateTimeField(blank = True, null = True)
+    seller = models.ForeignKey(Person, blank = True, null = True, related_name = "seller_for_bdika")
+    worker = models.ForeignKey(Person, blank = True, null = True, related_name = "worker_for_bdika")
+    owner = models.ForeignKey('Client', blank = True, null = True, related_name = "owner_for_bdika")
+    payment = models.DecimalField(decimal_places=2, max_digits=8)
+    def __unicode__(self):
+        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+    class Meta:
+        ordering = ['owner','date_of_bdika',]
+class Claim(models.Model):
+    mezuza = models.ManyToManyField('Mezuza',related_name = "for_claim", blank=True, null=True)
+    tfilin = models.ManyToManyField('Tfilin',related_name = "for_claim", blank=True, null=True)
+    bdikot = models.ManyToManyField('Bdikot',related_name = "for_claim", blank=True, null=True)
+    discount = models.DecimalField(decimal_places=2, max_digits=8, blank=True, null=True)
+    date_of_claim = models.DateTimeField()    
     get_cash = models.DecimalField(decimal_places=2, max_digits=8, blank = True, null = True)
     date_of_payment = models.DateTimeField(blank = True, null = True)
-    def __unicode__(self):
-        return ";".join((str(self.id),str(self.number),str(self.date_of_claim)))
-    class Meta:
-        ordering = ['date_of_claim',]
 class Client(models.Model):
     fio = models.CharField(max_length=140,blank = True, null = True)
     tel = models.CharField(max_length=10,blank = True, null = True)
@@ -73,8 +104,8 @@ class Client(models.Model):
     children_client = models.ManyToManyField('Client',related_name = "parent_client",blank = True, null = True)
     deleted = models.BooleanField(default=False)
     acl = models.TextField(default=False)
-    # Мивцы
-    mezuza = models.ManyToManyField('Mezuza',related_name = "for_client", blank=True, null=True)
+    # Заказы
+    claims = models.ManyToManyField('Claim',related_name = "for_client", blank=True, null=True)
     def __unicode__(self):
         return u";".join((str(self.id),self.fio,"\t"+self.tel))
     class Meta:

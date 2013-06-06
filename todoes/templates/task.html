@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-    {{task.name}}
+    {{task.fio}}
 {% endblock %}
 {% block style %}
     <style>
@@ -67,7 +67,7 @@
         <td>
             <table border=1>
             <tr><th colspan="2">Выбранный клиент: {{task.fio}}</th></tr>
-                <tr><td>Телефон</td><td>{{task.tel}}</td></tr>
+                <tr><td>Телефон</td><td>+7-{{task.tel}}</td></tr>
                 <tr><td>Почта</td><td>{{task.mail}}</td></tr>
                 <tr><td>Исполнитель</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
                 {# <tr><td>Приоритет</td><td>{{task.priority}}</td></tr> #}
@@ -75,7 +75,7 @@
                 <tr><td>Дата напоминания</td><td>{{task.when_to_reminder}}</td></tr>
             </table>
                 <p><a href="/edit/{{task.id}}">Редактировать описание клиента</a></p>
-                <p><a href="/add_children_task/one_time/{{task.id}}">Добавить дочернего клиента</a></p>
+                <p><a href="/client_claims/{{task.id}}">История заказов</a></p>
 
                 <p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Удалить клиента" name="del_client" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
 
@@ -138,7 +138,7 @@
                 <table border=1>
                     {{ form.as_table }}
                 </table>
-                <input type="checkbox" onClick="del_selection()" /> Не уведомлять о комментарии
+                {# <input type="checkbox" onClick="del_selection()" /> Не уведомлять о комментарии #}
                 <input type="submit" value="Сохранить комментарий" name="add_comment" /> 
             </form>
         </td>

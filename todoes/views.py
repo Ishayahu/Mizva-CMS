@@ -4,8 +4,8 @@
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 import datetime
-from todoes.models import Note, File, Person, Client, Categories, Activity, Mezuza
-from todoes.forms import NewClientForm,ClientSearchForm,NoteToClientAddForm,UserCreationFormMY
+from todoes.models import Note, File, Person, Client, Categories, Activity, Mezuza, Claim, Tfilin, Bdikot
+from todoes.forms import NewClientForm, EditClientForm, ClientSearchForm, NoteToClientAddForm, UserCreationFormMY, NewClaimForm, EditClientForm
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -46,24 +46,12 @@ def new_client(request):
         form = NewClientForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            with_claim = False
-            if 'number' in data and data['number']:
-                m=Mezuza(number=data['number'],
-                    date_of_claim=datetime.datetime.now(),
-                    payment=data['payment'],
-                    get_cash=data['get_cash'],
-                    date_of_payment=datetime.datetime.now())
-                m.save()
-                with_claim=True
             c=Client(fio=data['fio'], 
                     tel = data['tel'],
                     mail = data['mail'],
                     description = data['description'],
                     entering_date = datetime.datetime.now())
             c.save()
-            if with_claim:
-                c.mezuza.add(m)
-                c.save()
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             #set_last_activity(user,request.path)
@@ -74,39 +62,153 @@ def new_client(request):
     return render_to_response('new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 
 @login_required
-def new_regular_ticket(request):
+def client_claims(request,client_id):
+    user = request.user.username
+    try:
+        fio = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        fio = FioError()
+    try:
+        client_full = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        request.session['my_error'] = u'Нет такого клиента. Номер %s!' % client_id
+        return HttpResponseRedirect("/")
+    method = request.method
+    if request.method == 'POST':
+        form = NewClaimForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            m=Mezuza(number=data['number'],
+                date_of_claim=datetime.datetime.now(),
+                payment=data['payment'],
+                get_cash=data['get_cash'],
+                seller = fio)
+            if data['get_cash']:
+                m.date_of_payment=datetime.datetime.now()
+            m.save()
+            client_full.mezuza.add(m)
+            client_full.save()
+            # отправляем уведомление исполнителю по мылу
+            #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
+            #set_last_activity(user,request.path)
+            return HttpResponseRedirect(request.get_full_path())
+    else:
+        form = NewClaimForm()
+    #set_last_activity(user,request.path)
+    # Рисуем историю заказов
+    claims=''
+    try:
+        claims=Claim.objects.filter(for_client=client_full).order_by('-date_of_claim')
+    except Claim.DoesNotExist:
+        pass
+    for c in claims:
+        c.description=u''
+        full_pay=0
+        got_pay=0
+        try:
+            m=Mezuza.objects.get(for_claim=c)
+            c.description+=u'%s мезуз\n' % len(m.number)
+            full_pay+=m.payment
+            got_pay+=m.get_cash            
+        except Mezuza.DoesNotExist:
+            pass
+        try:
+            t=Tfilin.objects.get(for_claim=c)
+            c.description+=u'%s тфилинов\n' % len(t.number)
+            full_pay+=t.payment
+            got_pay+=t.get_cash
+        except Mezuza.DoesNotExist:
+            pass
+        try:
+            b=Bdikot.objects.get(for_claim=c)
+            c.description+=u'%s проверок мезуз/тфилинов\n' % len(b.number)
+            full_pay+=t.payment
+            got_pay+=t.get_cash
+        except Mezuza.DoesNotExist:
+            pass
+        c.rest_cash = int(full_pay-got_pay)
+    workers=Person.objects.all()
+    mezuzas = Mezuza.objects.filter(owner=client_full).filter(gniza=False)
+    tfilins = Tfilin.objects.filter(owner=client_full).filter(gniza=False)
+    can_bdika=False
+    if mezuzas or tfilins:
+        can_bdika=True
+    return render_to_response('client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins,'form':form, 'method':method,'claims':claims},RequestContext(request))
+@login_required
+def edit_payment(request,claim_id):
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
     except Person.DoesNotExist:
         fio = FioError()
     method = request.method
+    try:
+        c=Mezuza.objects.get(id=claim_id)
+    except Mezuza.DoesNotExist:
+        request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
+        return HttpResponseRedirect("/") 
+    client=c.for_client.get()
     if request.method == 'POST':
-        form = NewRegularTicketForm(request.POST)
+        form = EditClaimForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            t=RegularTask(name=data['name'], 
-                description=data['description'], 
-                client=data['clients'], 
-                priority=data['priority'], 
-                category=data['category'], 
-                start_date=data['start_date'], 
-                next_date=data['start_date'],
-                when_to_reminder = data['start_date'],
-                stop_date=data['stop_date'], 
-                worker=data['workers'],
-                acl = data['clients'].login+';'+data['workers'].login,
-                period = request.POST.get('cronized'))                
-            t.save()
+            # TODO добавить оповещения или вести историю изменений
+            c.number=data['number']
+            c.date_of_claim=data['date_of_claim']
+            c.payment=data['payment']
+            c.get_cash=data['get_cash']
+            c.seller = data['seller']
+            c.worker = data['worker']
+            c.date_of_payment = data['date_of_payment']
+            c.date_of_installation = data['date_of_installation']
+            c.save()
             # отправляем уведомление исполнителю по мылу
-            send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
-            set_last_activity(user,request.path)
-            return HttpResponseRedirect('/')
+            #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
+            #set_last_activity(user,request.path)
+            return HttpResponseRedirect("/client_payments/"+str(client.id))
     else:
-        form = NewRegularTicketForm({'start_date':datetime.datetime.now(),'due_date':datetime.datetime.now(),'priority':3})
-    set_last_activity(user,request.path)
-    return render_to_response('new_regular_task.html', {'form':form, 'method':method},RequestContext(request))
-   
+        form = EditClaimForm({'number' : c.number,
+                            'date_of_claim' : c.date_of_claim,
+                            'date_of_installation' : c.date_of_installation,
+                            'seller' : c.seller,
+                            'worker' : c.worker,
+                            'payment' : c.payment,
+                            'get_cash' : c.get_cash,
+                            'date_of_payment' : c.date_of_payment,
+                            })    
+    return render_to_response('edit_payment.html', {'form':form, 'method':method, 'claim':c},RequestContext(request))
+@login_required
+def debt(request,claim_id,adding):
+    try:
+        c=Mezuza.objects.get(id=claim_id)
+    except Mezuza.DoesNotExist:
+        request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
+        return HttpResponseRedirect("/") 
+    client=c.for_client.get()
+    c.get_cash+=int(adding)
+    c.date_of_payment=datetime.datetime.now()
+    c.save()
+    return HttpResponseRedirect("/client_payments/"+str(client.id))
+@login_required
+def print_payment(request,claim_id):
+    user = request.user.username
+    try:
+        manager = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        manager = FioError()
+    try:
+        c=Mezuza.objects.get(id=claim_id)
+    except Mezuza.DoesNotExist:
+        request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
+        return HttpResponseRedirect("/")
+    return render_to_response('print_payment.html', {'now':datetime.datetime.now(),'manager':manager, 'claim':c},RequestContext(request))
+    
+    
+    
+    
+    
+    
+    
 @login_required
 def set_reminder(request,task_type,task_id):
     if not acl(request,task_type,task_id):
@@ -209,12 +311,21 @@ def clients(request):
             worker = 'Нет такого пользователя'
         # получаем заявки ДЛЯ человека
         # просроченные
-        try:
-            # Получаем клиентов, у которых стоит напоминалка
-            clients_to_show = Client.objects.filter(deleted = False).filter(exit_date__isnull=True).filter(when_to_reminder__lt=datetime.datetime.now())
-        except:
-            clients_to_show = ''# если задач нет - вывести это в шаблон        
+        # Получаем клиентов, у которых стоит напоминалка
+        #clients_to_show = Client.objects.filter(deleted = False).filter(exit_date__isnull=True).filter(when_to_reminder__lt=datetime.datetime.now())
+        ms=Mezuza.objects.filter(date_of_installation__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
+        ts=Tfilin.objects.filter(date_of_installation__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
+        clients_to_show=set()
+        a1 = set(ms)
+        if ts:
+            a1.update(set(ts))
+        for c in a1:
+            clients_to_show.add(c.owner)
+        #for c in ts:
+        #    clients_to_show.add(c.owner_for_tfilin.get())
+        clients_to_show = ''# если задач нет - вывести это в шаблон        
         # получаем кол-во клиентов в этот раз и сравниваем с тем, что было для уведомления всплывающим окном или ещё какой фигней
+        
         alert = False
         if request.session.get('clients_number'):
             clients_number_was = int(request.session.get('clients_number'))
@@ -244,7 +355,11 @@ def client(request,client_id):
         fio = FioError()
     try:
         # есть ли здача или она уже удалена?
-        client_full = Client.objects.get(id=client_id)
+        try:
+            client_full = Client.objects.get(id=client_id)
+        except Client.DoesNotExist:
+            request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
+            return HttpResponseRedirect("/")
         try:
             tmp_notes = Note.objects.filter(for_client=client_full).order_by('-timestamp')
         except Note.DoesNotExist:
@@ -499,103 +614,42 @@ def confirm_task(request,task_to_confirm_id):
     set_last_activity(user,request.path)
     return render_to_response('confirm_ticket.html', {'form':form,'task':task_to_confirm,'notes':notes,'method':method,'fio':fio},RequestContext(request))    
 @login_required
-def edit_task(request,task_to_edit_id):
-    if not acl(request,'one_time',task_to_edit_id):
-        request.session['my_error'] = u'Нет права доступа к этой задаче!'
-        return HttpResponseRedirect("/tasks/")
-
-    task_to_edit = Task.objects.get(id=task_to_edit_id)
-    method = request.method
-    
+def edit_client(request,client_id):
+    #if not acl(request,'one_time',task_to_edit_id):
+    #   request.session['my_error'] = u'Нет права доступа к этой задаче!'
+    #    return HttpResponseRedirect("/tasks/")
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
     except Person.DoesNotExist:
-        fio = FioError()
-    
+        fio = FioError
+    method = request.method
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        request.session['my_error'] = u'Нет такого клиента. Номер %s!' % client_id
+        return HttpResponseRedirect("/")    
     if request.method == 'POST':
-        form = TicketEditForm(request.POST)
-        # если меняется исполнитель - чтобы оповестить
-        old_worker = task_to_edit.worker
-        old_pbu = task_to_edit.pbu
-        old_client = task_to_edit.client
-        old_category = task_to_edit.category
-        old_due_date = task_to_edit.due_date
-        old_name = task_to_edit.name
+        form = EditClientForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            task_to_edit.name=data['name']
-            task_to_edit.pbu=data['pbus']
-            task_to_edit.description=data['description']
-            task_to_edit.client=data['clients']
-            task_to_edit.priority=data['priority']
-            task_to_edit.category=data['category'] 
-            task_to_edit.start_date=data['start_date']
-            task_to_edit.due_date=data['due_date']
-            task_to_edit.worker=data['workers']
-            task_to_edit.percentage=data['percentage']
-            task_to_edit.when_to_reminder=data['when_to_reminder']
-            task_to_edit.save()
-            if task_to_edit.name != old_name:
-                send_email_alternative(u"Изменёно название задачи: "+old_name,
-                           u"Прежнее название:"+old_name+u"\nНовое название:"+task_to_edit.name+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.worker != old_worker:
-                # добавление нового исполнителя в acl
-                if task_to_edit.worker.login not in task_to_edit.acl:
-                    task_to_edit.acl=task_to_edit.acl+";"+task_to_edit.worker.login
-                    task_to_edit.save()
-                send_email_alternative(u"Изменён исполнитель задачи: "+task_to_edit.name,
-                           u"Прежний исполнитель:"+old_worker.fio+u"\nНовый исполнитель:"+task_to_edit.worker.fio+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail,old_worker.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.pbu != old_pbu:
-                send_email_alternative(u"Изменёно описание проблемы со слов пользователя для задачи: "+task_to_edit.name,
-                           u"Прежная проблема:"+old_pbu.name+u"\nНовая проблема:"+task_to_edit.pbu.name+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.client != old_client:
-                # добавление нового заказчика в acl
-                if task_to_edit.client.login not in task_to_edit.acl:
-                    task_to_edit.acl=task_to_edit.acl+";"+task_to_edit.client.login
-                    task_to_edit.save()
-                send_email_alternative(u"Изменён заказчик задачи: "+task_to_edit.name,
-                           u"Прежний заказчик:"+old_client.fio+u"\nНовый заказчик:"+task_to_edit.client.fio+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail,old_client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.category != old_category:
-                send_email_alternative(u"Изменёна категория задачи: "+task_to_edit.name,
-                           u"Прежная категория:"+old_category.name+u"\nНовая категория:"+task_to_edit.category.name+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            if task_to_edit.due_date != old_due_date:
-                send_email_alternative(u"Изменён срок выполонения задачи: "+task_to_edit.name,
-                           u"Старый срок:"+str(old_due_date)+u"\nНовый срок:"+str(task_to_edit.due_date)+u"\nОписание задачи:\n"+task_to_edit.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(task_to_edit.id),
-                           [task_to_edit.worker.mail,task_to_edit.client.mail]+admins_mail,
-                           fio
-                           )
-            set_last_activity(user,request.path)
-            return HttpResponseRedirect('/tasks/')
+            client.fio=data['fio']
+            client.description=data['description']
+            client.entering_date=data['entering_date']
+            client.exiting_date=data['exiting_date']
+            client.mail=data['mail']
+            client.tel=data['tel']
+            client.save()
+            return HttpResponseRedirect("/client/"+str(client.id))
     else:
-        form = TicketEditForm({'name' : task_to_edit.name,
-            'pbus' : task_to_edit.pbu,
-            'description' : task_to_edit.description,
-            'clients' : task_to_edit.client,
-            'priority' : task_to_edit.priority,
-            'category' : task_to_edit.category,
-            'start_date' : task_to_edit.start_date,
-            'when_to_reminder' : task_to_edit.when_to_reminder,
-            'due_date' : task_to_edit.due_date,
-            'workers' : task_to_edit.worker,
-            'percentage' : task_to_edit.percentage
-        })
-    set_last_activity(user,request.path)
+        form = EditClientForm({'fio':client.fio,
+                            'description':client.description,
+                            'entering_date':client.entering_date,
+                            'exiting_date':client.exiting_date,
+                            'mail':client.mail,
+                            'tel':client.tel,
+                            })
+    
     return render_to_response('new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 @login_required
 def delete_task(request,task_type,task_to_delete_id):

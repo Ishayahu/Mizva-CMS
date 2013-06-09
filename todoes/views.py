@@ -59,7 +59,14 @@ def new_client(request):
                     tel = data['tel'],
                     mail = data['mail'],
                     description = data['description'],
-                    entering_date = datetime.datetime.now())
+                    entering_date = datetime.datetime.now(),
+                    dr = data['dr'],
+                    spouse_fio = data['spouse_fio'],
+                    spouse_tel = data['spouse_tel'],
+                    spouse_mail = data['spouse_mail'],
+                    spouse_dr = data['spouse_dr'],
+                    home_tel = data['home_tel'],
+                    address = data['address'])
             c.save()
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
@@ -409,6 +416,7 @@ def change_language(request,lang):
 
 @login_required    
 def register(request):
+    lang=select_language(request)
     if request.method == 'POST':
         form = UserCreationFormMY(request.POST)
         if form.is_valid():
@@ -424,7 +432,7 @@ def register(request):
             return HttpResponseRedirect("/")
     else:
         form = l_forms[lang]['UserCreationFormMY']()
-    return render_to_response("registration/register.html",{'form':form},RequestContext(request))
+    return render_to_response(languages[lang]+"registration/register.html",{'form':form},RequestContext(request))
 @login_required    
 def profile(request):
     user = request.user.username
@@ -598,6 +606,10 @@ def client(request,client_id):
             for note in notes:
                 note.note = htmlize(note.note)
             #set_last_activity(user,request.path)
+            if client_full.dr:
+                client_full.age=(datetime.datetime.now().date()-client_full.dr).days//365
+            if client_full.spouse_dr:
+                client_full.spouse_age=(datetime.datetime.now().date()-client_full.spouse_dr).days//365
             return render_to_response(languages[lang]+'task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form},RequestContext(request))
     # если задачи нет - возвращаем к списку с ошибкой
     except Client.DoesNotExist:
@@ -781,6 +793,13 @@ def edit_client(request,client_id):
             client.exiting_date=data['exiting_date']
             client.mail=data['mail']
             client.tel=data['tel']
+            client.dr=data['dr']
+            client.spouse_fio=data['spouse_fio']
+            client.spouse_tel=data['spouse_tel']
+            client.spouse_mail=data['spouse_mail']
+            client.spouse_dr=data['spouse_dr']
+            client.address=data['address']
+            client.home_tel=data['home_tel']
             client.save()
             return HttpResponseRedirect("/client/"+str(client.id))
     else:
@@ -790,6 +809,13 @@ def edit_client(request,client_id):
                             'exiting_date':client.exiting_date,
                             'mail':client.mail,
                             'tel':client.tel,
+                            'dr':client.dr,
+                            'spouse_fio':client.spouse_fio,
+                            'spouse_tel':client.spouse_tel,
+                            'spouse_mail':client.spouse_mail,
+                            'spouse_dr':client.spouse_dr,
+                            'address':client.address,
+                            'home_tel':client.home_tel,
                             })
     
     return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))

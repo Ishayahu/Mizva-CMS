@@ -108,6 +108,14 @@ class Client(models.Model):
     children_client = models.ManyToManyField('Client',related_name = "parent_client",blank = True, null = True)
     deleted = models.BooleanField(default=False)
     acl = models.TextField(default=False)
+    # День рождения
+    dr = models.DateField(blank = True, null = True)
+    spouse_fio = models.CharField(max_length=140,blank = True, null = True)
+    spouse_tel = models.CharField(max_length=10,blank = True, null = True)
+    spouse_mail = models.EmailField(blank = True, null = True)
+    spouse_dr = models.DateField(blank = True, null = True)
+    address = models.TextField(blank = True, null = True)
+    home_tel = models.CharField(max_length=10,blank = True, null = True)
     # Заказы
     claims = models.ManyToManyField('Claim',related_name = "for_client", blank=True, null=True)
     def __unicode__(self):

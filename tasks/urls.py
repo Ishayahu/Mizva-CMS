@@ -19,13 +19,16 @@ urlpatterns = patterns('',
     # просмотр всех задач
     url(r'^all_clients/$', todoes.views.all_clients),
     url(r'^new_client/$', todoes.views.new_client),
-    url(r'^edit/([^/]+)/$', todoes.views.edit_client),
+    url(r'^edit/(\d+)/$', todoes.views.edit_client),
+    # изменение языка интерфейса
+    url(r'^language/([^/]+)/$', todoes.views.change_language),
     # клиент и заказы
     url(r'^client/(\d+)/$', todoes.views.client),
     url(r'^client_claims/(\d+)/$', todoes.views.client_claims),
-    url(r'^print/payment/(\d+)/$', todoes.views.print_payment),
-    url(r'^edit_payment/(\d+)/$', todoes.views.edit_payment),
+    url(r'^print/claim/(\d+)/$', todoes.views.print_claim),
+    url(r'^edit_claim/(\d+)/$', todoes.views.edit_claim),
     url(r'^debt/(\d+)/(\d+)/$', todoes.views.debt),
+    url(r'^delete_claim/(\d+)/$', todoes.views.delete_claim),
 
     # установка напоминалки повторяющейся задачи
     # удаление повторяющейся задачи

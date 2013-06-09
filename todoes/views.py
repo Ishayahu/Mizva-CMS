@@ -29,13 +29,15 @@ from todoes.utils import build_note_tree, note_with_indent
 
 #task_types = {'one_time':Task,'regular':RegularTask}
 task_addr = {'one_time':'one_time','regular':'regular'}
-
+languages={'ru':'RUS/',
+            'eng':'ENG/'}
 
 def set_last_activity(login,url):
     set_last_activity_model(login,url,url_not_to_track,url_one_record)
 
 @login_required
 def new_client(request):
+    lang=select_language(request)
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
@@ -55,14 +57,15 @@ def new_client(request):
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             #set_last_activity(user,request.path)
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect("/client_claims/"+str(c.id))
     else:
         form = NewClientForm()
     #set_last_activity(user,request.path)
-    return render_to_response('new_ticket.html', {'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 
 @login_required
 def client_claims(request,client_id):
+    lang=select_language(request)
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
@@ -75,23 +78,84 @@ def client_claims(request,client_id):
         return HttpResponseRedirect("/")
     method = request.method
     if request.method == 'POST':
-        form = NewClaimForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            m=Mezuza(number=data['number'],
-                date_of_claim=datetime.datetime.now(),
-                payment=data['payment'],
-                get_cash=data['get_cash'],
-                seller = fio)
-            if data['get_cash']:
-                m.date_of_payment=datetime.datetime.now()
-            m.save()
-            client_full.mezuza.add(m)
-            client_full.save()
-            # отправляем уведомление исполнителю по мылу
-            #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
-            #set_last_activity(user,request.path)
-            return HttpResponseRedirect(request.get_full_path())
+        number_of_mezuzot = request.POST['number_of_mezuzot']
+        number_of_tfilins = request.POST['number_of_tfilins']
+        c = Claim(discount = request.POST['discount'],
+                    date_of_claim = datetime.datetime.now(),
+                    get_cash = request.POST['get_cash'],
+                    )
+        if c.get_cash:
+            c.date_of_payment = datetime.datetime.now()
+        c.save()
+        c.for_client.add(client_full)
+        c.save()
+        # Проходимся по мезузам
+        for i in range(1,int(number_of_mezuzot)+1):
+            if 'mezuza_desc_'+str(i) in request.POST:
+                try:
+                    worker = Person.objects.get(id=request.POST['mezuza_worker_'+str(i)])
+                except Person.DoesNotExist:
+                    worker = False
+                m=Mezuza(description = request.POST['mezuza_desc_'+str(i)],
+                        date_of_last_check = datetime.datetime.now(),
+                        worker = worker,
+                        seller = fio,
+                        owner = client_full,
+                        payment = request.POST['mezuza_payment_'+str(i)],
+                        gniza=False,
+                        )
+                m.save()
+                c.mezuza.add(m)
+        for i in range(1,int(number_of_tfilins)+1):
+            if 'tfilin_desc_'+str(i) in request.POST:
+                try:
+                    worker = Person.objects.get(id=request.POST['tfilin_worker_'+str(i)])
+                except Person.DoesNotExist:
+                    worker = False
+                t=Tfilin(description = request.POST['tfilin_desc_'+str(i)],
+                        date_of_last_check = datetime.datetime.now(),
+                        worker = worker,
+                        seller = fio,
+                        owner = client_full,
+                        payment = request.POST['tfilin_payment_'+str(i)],
+                        gniza=False,
+                        )
+                t.save()
+                c.tfilin.add(t)
+        if "bdikot_text" in request.POST and request.POST['bdikot_text']!=u'':
+            try:
+                worker = Person.objects.get(id=request.POST['bdikot_worker'])
+            except Person.DoesNotExist:
+                worker = False
+            b_txt = request.POST['bdikot_text']
+            b_txt=b_txt.split(';')[:-1]
+            of_what=''
+            payment=0
+            for item in b_txt:
+                w,p = item.split(',')
+                of_what=w+";"
+                payment+=int(p)
+            b=Bdikot(of_what = of_what,
+                    date_of_bdika = datetime.datetime.now(),
+                    seller = fio,
+                    worker = worker,
+                    owner = client_full,
+                    payment = payment
+                    )
+            b.save()
+            c.bdikot.add(b)
+            c.save()
+            item_type = {'mezuza':Mezuza,
+                        'tfilin':Tfilin}
+            for item in b.of_what.split(';')[:-1]:
+                w,n=item.split('_')
+                i = item_type[w].objects.get(id=n)
+                i.date_of_last_check=datetime.datetime.now().replace(year=datetime.datetime.now().year + 1)
+                i.save()
+        # отправляем уведомление исполнителю по мылу
+        #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
+        #set_last_activity(user,request.path)
+        return HttpResponseRedirect(request.get_full_path())
     else:
         form = NewClaimForm()
     #set_last_activity(user,request.path)
@@ -105,49 +169,69 @@ def client_claims(request,client_id):
         c.description=u''
         full_pay=0
         got_pay=0
-        try:
-            m=Mezuza.objects.get(for_claim=c)
-            c.description+=u'%s мезуз\n' % len(m.number)
+        ms=Mezuza.objects.filter(for_claim=c)
+        c.description+=u'%s мезуз\n' % len(ms)
+        for m in ms:
             full_pay+=m.payment
-            got_pay+=m.get_cash            
-        except Mezuza.DoesNotExist:
-            pass
-        try:
-            t=Tfilin.objects.get(for_claim=c)
-            c.description+=u'%s тфилинов\n' % len(t.number)
+            #got_pay+=m.get_cash            
+        ts=Tfilin.objects.filter(for_claim=c)
+        c.description+=u'%s тфилинов\n' % len(ts)
+        for t in ts:
             full_pay+=t.payment
-            got_pay+=t.get_cash
-        except Mezuza.DoesNotExist:
-            pass
+            #got_pay+=t.get_cash
         try:
             b=Bdikot.objects.get(for_claim=c)
-            c.description+=u'%s проверок мезуз/тфилинов\n' % len(b.number)
-            full_pay+=t.payment
-            got_pay+=t.get_cash
-        except Mezuza.DoesNotExist:
+            c.description+=u'%s проверок мезуз/тфилинов\n' % (len(b.of_what.split(';'))-1)
+            full_pay+=b.payment
+            #got_pay+=t.get_cash
+        except Bdikot.DoesNotExist:
             pass
-        c.rest_cash = int(full_pay-got_pay)
+        c.rest_cash = int(full_pay-c.get_cash-c.discount)
+        c.payment = full_pay-c.discount
+    # Для нового счёта: работники, имеющиеся активные мезузы и тфилины
     workers=Person.objects.all()
     mezuzas = Mezuza.objects.filter(owner=client_full).filter(gniza=False)
     tfilins = Tfilin.objects.filter(owner=client_full).filter(gniza=False)
     can_bdika=False
     if mezuzas or tfilins:
         can_bdika=True
-    return render_to_response('client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins,'form':form, 'method':method,'claims':claims},RequestContext(request))
+    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins,'form':form, 'method':method,'claims':claims},RequestContext(request))
 @login_required
-def edit_payment(request,claim_id):
+def edit_claim(request,claim_id):
+    lang=select_language(request)
     user = request.user.username
     try:
         fio = Person.objects.get(login=user)
     except Person.DoesNotExist:
         fio = FioError()
     method = request.method
+    user = request.user.username
     try:
-        c=Mezuza.objects.get(id=claim_id)
-    except Mezuza.DoesNotExist:
+        manager = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        manager = FioError()
+    try:
+        c=Claim.objects.get(id=claim_id)
+    except Claim.DoesNotExist:
         request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
-        return HttpResponseRedirect("/") 
-    client=c.for_client.get()
+        return HttpResponseRedirect("/")
+    full_pay=0
+    got_pay=0
+    ms = c.mezuza.all()
+    ts = c.tfilin.all()
+    b=False
+    if c.bdikot.count():
+        b = c.bdikot.get()
+        full_pay+=b.payment
+    for m in ms:
+        full_pay+=m.payment
+    for t in ts:
+        full_pay+=t.payment
+    c.rest_cash = full_pay-c.get_cash-c.discount
+    c.payment = full_pay-c.discount
+    c.full_pay=full_pay
+    
+    
     if request.method == 'POST':
         form = EditClaimForm(request.POST)
         if form.is_valid():
@@ -165,7 +249,7 @@ def edit_payment(request,claim_id):
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             #set_last_activity(user,request.path)
-            return HttpResponseRedirect("/client_payments/"+str(client.id))
+            return HttpResponseRedirect("/client_claims/"+str(client.id))
     else:
         form = EditClaimForm({'number' : c.number,
                             'date_of_claim' : c.date_of_claim,
@@ -176,37 +260,80 @@ def edit_payment(request,claim_id):
                             'get_cash' : c.get_cash,
                             'date_of_payment' : c.date_of_payment,
                             })    
-    return render_to_response('edit_payment.html', {'form':form, 'method':method, 'claim':c},RequestContext(request))
+    return render_to_response(languages[lang]+'edit_payment.html', {'form':form, 'method':method, 'claim':c},RequestContext(request))
 @login_required
 def debt(request,claim_id,adding):
     try:
-        c=Mezuza.objects.get(id=claim_id)
-    except Mezuza.DoesNotExist:
+        c=Claim.objects.get(id=claim_id)
+    except Claim.DoesNotExist:
         request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
         return HttpResponseRedirect("/") 
     client=c.for_client.get()
     c.get_cash+=int(adding)
     c.date_of_payment=datetime.datetime.now()
     c.save()
-    return HttpResponseRedirect("/client_payments/"+str(client.id))
+    return HttpResponseRedirect("/client_claims/"+str(client.id))
 @login_required
-def print_payment(request,claim_id):
+def print_claim(request,claim_id):
+    lang=select_language(request)
     user = request.user.username
     try:
         manager = Person.objects.get(login=user)
     except Person.DoesNotExist:
         manager = FioError()
     try:
-        c=Mezuza.objects.get(id=claim_id)
-    except Mezuza.DoesNotExist:
+        c=Claim.objects.get(id=claim_id)
+    except Claim.DoesNotExist:
         request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
         return HttpResponseRedirect("/")
-    return render_to_response('print_payment.html', {'now':datetime.datetime.now(),'manager':manager, 'claim':c},RequestContext(request))
+    full_pay=0
+    got_pay=0
+    ms = c.mezuza.all()
+    ts = c.tfilin.all()
+    b=False
+    if c.bdikot.count():
+        b = c.bdikot.get()
+        full_pay+=b.payment
+    for m in ms:
+        full_pay+=m.payment
+    for t in ts:
+        full_pay+=t.payment
+    c.rest_cash = full_pay-c.get_cash-c.discount
+    c.payment = full_pay-c.discount
+    c.full_pay=full_pay
+    return render_to_response(languages[lang]+'print_payment.html', {'now':datetime.datetime.now(),'manager':manager, 'claim':c,'mezuzas':ms,'tfilins':ts,'bdika':b},RequestContext(request))
+def delete_claim(request,claim_id):
+    user = request.user.username
+    try:
+        manager = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        manager = FioError()
+    try:
+        c=Claim.objects.get(id=claim_id)
+    except Claim.DoesNotExist:
+        request.session['my_error'] = u'Нет такого заказа. Номер %s!' % claim_id
+        return HttpResponseRedirect("/")
+    client = c.for_client.get()
+    ms = c.mezuza.all()
+    ts = c.tfilin.all()
+    if c.bdikot.count():
+        b = c.bdikot.get()
+        b.delete()
+    for m in ms:
+        m.delete()
+    for t in ts:
+        t.delete()
+    c.delete()
+    return HttpResponseRedirect("/client_claims/"+str(client.id))  
     
     
     
-    
-    
+def select_language(request):
+    if request.session.get('language'):
+        lang = request.session.get('language')
+    else:
+        lang='ru'
+    return lang
     
     
 @login_required
@@ -237,7 +364,7 @@ def set_reminder(request,task_type,task_id):
         after_hour = str(datetime.datetime.now().hour+1)+":"+str(datetime.datetime.now().minute)
         today = str(datetime.datetime.now().day)+"/"+str(datetime.datetime.now().month)+"/"+str(datetime.datetime.now().year)
     set_last_activity(user,request.path)
-    return render_to_response('set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
+    return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
 @login_required
 def move_to_call(request,task_type,task_id):
     if not acl(request,task_type,task_id):
@@ -267,7 +394,11 @@ def move_to_call(request,task_type,task_id):
         after_hour = str(datetime.datetime.now().hour+1)+":"+str(datetime.datetime.now().minute)
         today = str(datetime.datetime.now().day)+"/"+str(datetime.datetime.now().month)+"/"+str(datetime.datetime.now().year)
     set_last_activity(user,request.path)
-    return render_to_response('set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
+    return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
+@login_required    
+def change_language(request,lang):
+    request.session['language']=lang
+    return HttpResponseRedirect('/')
 
 @login_required    
 def register(request):
@@ -299,6 +430,8 @@ def clients(request):
         my_error = [request.session.get('my_error'),]
     else:
         my_error=[]
+    lang = select_language(request)
+    print lang
     request.session['my_error'] = ''
     user = request.user.username
     method = request.method
@@ -313,8 +446,8 @@ def clients(request):
         # просроченные
         # Получаем клиентов, у которых стоит напоминалка
         #clients_to_show = Client.objects.filter(deleted = False).filter(exit_date__isnull=True).filter(when_to_reminder__lt=datetime.datetime.now())
-        ms=Mezuza.objects.filter(date_of_installation__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
-        ts=Tfilin.objects.filter(date_of_installation__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
+        ms=Mezuza.objects.filter(date_of_last_check__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
+        ts=Tfilin.objects.filter(date_of_last_check__lt=datetime.datetime.now().replace(year=datetime.datetime.now().year - 1))
         clients_to_show=set()
         a1 = set(ms)
         if ts:
@@ -341,9 +474,10 @@ def clients(request):
             admin = True
             pass
     #set_last_activity(user,request.path)
-    return render_to_response('tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert},RequestContext(request))
+    return render_to_response(languages[lang]+'tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert},RequestContext(request))
 @login_required
 def client(request,client_id):
+    lang=select_language(request)
 
     #if not acl(request,task_type,task_id):
     #    request.session['my_error'] = u'Нет права доступа к этой задаче!'
@@ -441,7 +575,7 @@ def client(request,client_id):
                         if note.id != int(note_to_edit_id):
                             note.note = htmlize(note.note)
                     #set_last_activity(user,request.path)
-                    return render_to_response('task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id)},RequestContext(request))
+                    return render_to_response(languages[lang]+'task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id)},RequestContext(request))
                 elif request.POST.get('save_edited_comment'):
                     note_to_edit_id = request.POST.get('num')
                     note_to_edit = Note.objects.get(id=note_to_edit_id)
@@ -457,7 +591,7 @@ def client(request,client_id):
             for note in notes:
                 note.note = htmlize(note.note)
             #set_last_activity(user,request.path)
-            return render_to_response('task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form},RequestContext(request))
+            return render_to_response(languages[lang]+'task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form},RequestContext(request))
     # если задачи нет - возвращаем к списку с ошибкой
     except Client.DoesNotExist:
         # print 'here'
@@ -615,6 +749,7 @@ def confirm_task(request,task_to_confirm_id):
     return render_to_response('confirm_ticket.html', {'form':form,'task':task_to_confirm,'notes':notes,'method':method,'fio':fio},RequestContext(request))    
 @login_required
 def edit_client(request,client_id):
+    lang = select_language(request)
     #if not acl(request,'one_time',task_to_edit_id):
     #   request.session['my_error'] = u'Нет права доступа к этой задаче!'
     #    return HttpResponseRedirect("/tasks/")
@@ -650,7 +785,7 @@ def edit_client(request,client_id):
                             'tel':client.tel,
                             })
     
-    return render_to_response('new_ticket.html', {'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 @login_required
 def delete_task(request,task_type,task_to_delete_id):
     user = request.user.username
@@ -697,6 +832,7 @@ def send_email(subject,message,to):
 
 @login_required
 def all_clients(request):
+    lang=select_language(request)
     def find_parent_task(note):
         """
         Поиск родительской заявки для примечания
@@ -735,7 +871,7 @@ def all_clients(request):
             if not finded_clients:
                 not_finded = True
             #set_last_activity(user,request.path)
-            return render_to_response('all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method},RequestContext(request))
+            return render_to_response(languages[lang]+'all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method},RequestContext(request))
     else:
         form = ClientSearchForm()
         if request.session.get('my_error'):
@@ -749,7 +885,7 @@ def all_clients(request):
         except:
             tasks = ''# если задач нет - вывести это в шаблон
     #set_last_activity(user,request.path)
-    return render_to_response('all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method},RequestContext(request))
 @login_required
 def add_children_task(request,parent_task_type,parent_task_id):
     method = request.method

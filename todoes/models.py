@@ -40,7 +40,7 @@ class Person(models.Model):
     raiting = models.CharField(max_length=30, blank = True, null = True)
     login = models.CharField(max_length=140, blank = True, null = True)
     def __unicode__(self):
-        return ";".join((self.fio,str(self.login)))
+        return u";".join((self.fio,str(self.login)))
     class Meta:
         ordering = ['fio',]
 class Mezuza(models.Model):
@@ -52,7 +52,7 @@ class Mezuza(models.Model):
     payment = models.DecimalField(decimal_places=2, max_digits=8)
     gniza=models.BooleanField(default=False)
     def __unicode__(self):
-        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+        return u";".join((str(self.id),self.owner.fio,str(self.date_of_last_check)))
     class Meta:
         ordering = ['owner','date_of_last_check',]
 class Tfilin(models.Model):
@@ -64,7 +64,7 @@ class Tfilin(models.Model):
     payment = models.DecimalField(decimal_places=2, max_digits=8)
     gniza=models.BooleanField(default=False)
     def __unicode__(self):
-        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+        return u";".join((str(self.id),self.owner.fio,str(self.date_of_last_check)))
     class Meta:
         ordering = ['owner','date_of_last_check',]
 class Bdikot(models.Model):
@@ -75,7 +75,7 @@ class Bdikot(models.Model):
     owner = models.ForeignKey('Client', blank = True, null = True, related_name = "owner_for_bdika")
     payment = models.DecimalField(decimal_places=2, max_digits=8)
     def __unicode__(self):
-        return ";".join((str(self.id),str(self.owner),str(self.date_of_claim)))
+        return u";".join((str(self.id),self.owner.fio,str(self.date_of_bdika)))
     class Meta:
         ordering = ['owner','date_of_bdika',]
 class Claim(models.Model):
@@ -86,6 +86,10 @@ class Claim(models.Model):
     date_of_claim = models.DateTimeField()    
     get_cash = models.DecimalField(decimal_places=2, max_digits=8, blank = True, null = True)
     date_of_payment = models.DateTimeField(blank = True, null = True)
+    def __unicode__(self):
+        return u";".join((str(self.id),self.for_client.get().fio,str(self.date_of_claim)))
+    class Meta:
+        ordering = ['date_of_claim','date_of_payment',]    
 class Client(models.Model):
     fio = models.CharField(max_length=140,blank = True, null = True)
     tel = models.CharField(max_length=10,blank = True, null = True)
@@ -107,7 +111,7 @@ class Client(models.Model):
     # Заказы
     claims = models.ManyToManyField('Claim',related_name = "for_client", blank=True, null=True)
     def __unicode__(self):
-        return u";".join((str(self.id),self.fio,"\t"+self.tel))
+        return u";".join((str(self.id),self.fio,u"\t"+self.tel))
     class Meta:
         ordering = ['fio','entering_date']
 

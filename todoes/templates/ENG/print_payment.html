@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}
+    Печать чека к заказу: {{claim.id}}
+{% endblock %}
+{% block style %}
+    <style>
+       .leftstr, .rightstr {
+        float: left; /* Обтекание справа */ 
+        width: 50%; /* Ширина текстового блока */ 
+       }
+       .rightstr {
+        text-align: right; /* Выравнивание по правому краю */ 
+       }
+       .author {
+        text-align: right; /* Выравнивание по правому краю */ 
+        width: 100%;
+       }
+       @page {size:'landscape;'} 
+      </style>
+{% endblock %}
+{% block content %}
+    <h2>Чек к заказу: {{claim.id}} от {{claim.date_of_claim}}</h2>
+   
+    <table border=1 cellpadding=2>
+        <tr>
+            <th>№№</th>
+            <th>Позиция</th>
+            <th>Цена</th>
+        </tr>
+        {% if mezuzas %}
+            {% for item in mezuzas %}
+                <tr>
+                        <td>{{item.id}}</td>
+                        <td>Мезуза: {{item.description}}</td>
+                        <td>{{item.payment}} руб.</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+        {% if mezuzas %}
+            {% for item in tfilins %}
+                <tr>
+                        <td>{{item.id}}</td>
+                        <td>Тфилин: {{item.description}}</td>
+                        <td>{{item.payment}} руб.</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+        {% if bdika %}
+            <tr>
+                    <td>{{bdika.id}}</td>
+                    <td>Проверка: {{bdika.description}}</td>
+                    <td>{{bdika.payment}} руб.</td>
+            </tr>
+        {% endif %}    
+        <tr>
+            <td colspan='2'>Итого</td>
+            <td>{{claim.full_pay}} руб.</td>
+        </tr>
+        <tr>
+            <td colspan='2'>Скидка</td>
+            <td>{{claim.discount}} руб.</td>
+        </tr>
+        <tr>
+            <td colspan='2'>Внесено</td>
+            <td>{{claim.get_cash}} руб.</td>
+        </tr>
+        <tr>
+            <td colspan='2'>Осталось</td>
+            <td>{{claim.rest_cash}} руб.</td>
+        </tr>        
+        </table>
+    <p class='rightstr'>Подпись ____________________________/{{manager.fio}}/</p>
+
+{% endblock %}

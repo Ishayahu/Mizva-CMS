@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "ENG/base.html" %}
 {% block title %}
-    Печать чека к заказу: {{claim.id}}
+    Check for the claim №{{claim.id}}
 {% endblock %}
 {% block style %}
     <style>
@@ -19,19 +19,19 @@
       </style>
 {% endblock %}
 {% block content %}
-    <h2>Чек к заказу: {{claim.id}} от {{claim.date_of_claim}}</h2>
+    <h2>Check for the claim №{{claim.id}} of {{claim.date_of_claim}}</h2>
    
     <table border=1 cellpadding=2>
         <tr>
             <th>№№</th>
-            <th>Позиция</th>
-            <th>Цена</th>
+            <th>Position</th>
+            <th>Price</th>
         </tr>
         {% if mezuzas %}
             {% for item in mezuzas %}
                 <tr>
                         <td>{{item.id}}</td>
-                        <td>Мезуза: {{item.description}}</td>
+                        <td>Mezuzah: {{item.description}}</td>
                         <td>{{item.payment}} руб.</td>
                 </tr>
             {% endfor %}
@@ -40,7 +40,7 @@
             {% for item in tfilins %}
                 <tr>
                         <td>{{item.id}}</td>
-                        <td>Тфилин: {{item.description}}</td>
+                        <td>Tfillin: {{item.description}}</td>
                         <td>{{item.payment}} руб.</td>
                 </tr>
             {% endfor %}
@@ -48,27 +48,27 @@
         {% if bdika %}
             <tr>
                     <td>{{bdika.id}}</td>
-                    <td>Проверка: {{bdika.description}}</td>
+                    <td>Bdika: {{bdika.description}}</td>
                     <td>{{bdika.payment}} руб.</td>
             </tr>
         {% endif %}    
         <tr>
-            <td colspan='2'>Итого</td>
+            <td colspan='2'>In total</td>
             <td>{{claim.full_pay}} руб.</td>
         </tr>
         <tr>
-            <td colspan='2'>Скидка</td>
+            <td colspan='2'>Discount</td>
             <td>{{claim.discount}} руб.</td>
         </tr>
         <tr>
-            <td colspan='2'>Внесено</td>
+            <td colspan='2'>Paid</td>
             <td>{{claim.get_cash}} руб.</td>
         </tr>
         <tr>
-            <td colspan='2'>Осталось</td>
+            <td colspan='2'>Debt</td>
             <td>{{claim.rest_cash}} руб.</td>
         </tr>        
         </table>
-    <p class='rightstr'>Подпись ____________________________/{{manager.fio}}/</p>
+    <p class='rightstr'>Signature ____________________________/{{manager.fio}}/</p>
 
 {% endblock %}

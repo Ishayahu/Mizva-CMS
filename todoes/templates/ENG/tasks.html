@@ -1,6 +1,6 @@
 {% extends "ENG/base.html" %}
 {% block title %}
-    Мицва CMS. Главная страница
+    Mizvah CMS. Main page
 {% endblock %}
 {% block style %}
     <style>
@@ -36,24 +36,24 @@
 {% endblock %}
 
 {% block content %}
-    <div class ="leftstr"><p>Hallo, {{ worker.fio }}!</p></div>
+    <div class ="leftstr"><p>Hello, {{ worker.fio }}!</p></div>
     <div class ="rightstr"><p><a href="/language/ru">ru</a>|<a href="/language/eng">eng</a></p>
     <p><a target="_new" href="/media/versions.html">v0.0.1</a></p></div>
     {% if admin %}
     {% endif %}
     <br />
     {% if alert %}
-        <script>alert("Появились новые напоминания!")</script>
+        <script>alert("New clients!")</script>
     {% endif %}
     {% if my_error %}
         {% for error in my_error %}
             <h2>{{error}}</h2><br />
         {% endfor %}
     {% endif %}
-     <p align="center"><a href="/new_client/">Добавить клиента</a></p>
+     <p align="center"><a href="/new_client/">Add new client</a></p>
     <table>
         <tr>
-            <th>Активные клиенты</th>
+            <th>Active clients</th>
             <th></th>
         </tr>
         <tr>

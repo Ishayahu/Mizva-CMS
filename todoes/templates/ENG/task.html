@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "ENG/base.html" %}
 {% block title %}
     {{task.fio}}
 {% endblock %}
@@ -50,8 +50,8 @@
       </script>
 {% endblock %}
 {% block content %}
-    <p class="leftstr"><a href="/">На главную</a></p>
-    <p class="rightstr">Привет, {{ fio.fio }}!</p>
+    <p class="leftstr"><a href="/">To main page</a></p>
+    <p class="rightstr">Hello, {{ fio.fio }}!</p>
     {% if my_error %}
         {% for error in my_error %}
             <h2>{{error}}</h2><br />
@@ -66,18 +66,18 @@
     <tr>
         <td>
             <table border=1>
-            <tr><th colspan="2">Выбранный клиент: {{task.fio}}</th></tr>
-                <tr><td>Телефон</td><td>+7-{{task.tel}}</td></tr>
-                <tr><td>Почта</td><td>{{task.mail}}</td></tr>
-                <tr><td>Исполнитель</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
+            <tr><th colspan="2">Client: {{task.fio}}</th></tr>
+                <tr><td>Tel</td><td>+7-{{task.tel}}</td></tr>
+                <tr><td>E-mail</td><td>{{task.mail}}</td></tr>
+                <tr><td>Worker</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
                 {# <tr><td>Приоритет</td><td>{{task.priority}}</td></tr> #}
-                <tr><td>Дата добавления</td><td>{{task.entering_date}}</td></tr>
-                <tr><td>Дата напоминания</td><td>{{task.when_to_reminder}}</td></tr>
+                <tr><td>Entering date</td><td>{{task.entering_date}}</td></tr>
+                <tr><td>Remembering date</td><td>{{task.when_to_reminder}}</td></tr>
             </table>
-                <p><a href="/edit/{{task.id}}">Редактировать описание клиента</a></p>
-                <p><a href="/client_claims/{{task.id}}">История заказов</a></p>
+                <p><a href="/edit/{{task.id}}">Edit description of a client</a></p>
+                <p><a href="/client_claims/{{task.id}}">History of claims</a></p>
 
-                <p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Удалить клиента" name="del_client" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
+                <p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Delete client" name="del_client" onclick="if (confirm('Shure?')) {return true} else {return false};"/></form></p>
 
         </td>
         <td>
@@ -86,7 +86,7 @@
             {# Вывод таблицы с комментариями #}
             
             <table border=1>
-                <tr><th colspan="3">Комментарии</th></tr>
+                <tr><th colspan="3">Notes</th></tr>
                     {% for note in notes %}
                         <tr>
                             <form action="" method="post">
@@ -113,15 +113,15 @@
                                 {# Если автор комментария - можно редактировать #}
                                 {% ifequal note.author.login fio.login %}
                                     {% ifequal note.id note_to_edit_id %}
-                                        <td colspan=2><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="Сохранить комментарий" name="save_edited_comment" /></td>
+                                        <td colspan=2><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="Save note" name="save_edited_comment" /></td>
                                     {% endifequal %}
                                     {% ifnotequal note.id note_to_edit_id %}
-                                        <td><input type="submit" value="&#9998;" title="Редактировать комментарий" name="edit_comment" /><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="&#10005;" title="Удалить комментарий" name="del_comment" /><div id="answer_to_note_{{note.id}}"><input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/></div></td>
+                                        <td><input type="submit" value="&#9998;" title="Edit note" name="edit_comment" /><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="&#10005;" title="Delete note" name="del_comment" /><div id="answer_to_note_{{note.id}}"><input type="button" value="Answer to note" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/></div></td>
                                     {% endifnotequal %}
                                 {% endifequal %}
                                 {# Если не автор комментария - только отвечать &#9997; #}
                                 {% ifnotequal note.author.login fio.login %}
-                                    <td><div id="answer_to_note_{{note.id}}"><input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" /></div></td>
+                                    <td><div id="answer_to_note_{{note.id}}"><input type="button" value="Answer to note" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" /></div></td>
                                 {% endifnotequal %}
                             </form>
                         </tr>
@@ -139,7 +139,7 @@
                     {{ form.as_table }}
                 </table>
                 {# <input type="checkbox" onClick="del_selection()" /> Не уведомлять о комментарии #}
-                <input type="submit" value="Сохранить комментарий" name="add_comment" /> 
+                <input type="submit" value="Save comment" name="add_comment" /> 
             </form>
         </td>
     </table>

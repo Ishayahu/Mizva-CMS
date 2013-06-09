@@ -5,7 +5,8 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render_to_response
 import datetime
 from todoes.models import Note, File, Person, Client, Categories, Activity, Mezuza, Claim, Tfilin, Bdikot
-from todoes.forms import NewClientForm, EditClientForm, ClientSearchForm, NoteToClientAddForm, UserCreationFormMY, NewClaimForm, EditClientForm
+from todoes.forms import NewClientForm, EditClientForm, ClientSearchForm, NoteToClientAddForm, UserCreationFormMY
+from todoes.forms import NewClientForm_ENG, EditClientForm_ENG, ClientSearchForm_ENG, NoteToClientAddForm_ENG, UserCreationFormMY_ENG
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -31,6 +32,12 @@ from todoes.utils import build_note_tree, note_with_indent
 task_addr = {'one_time':'one_time','regular':'regular'}
 languages={'ru':'RUS/',
             'eng':'ENG/'}
+forms_RUS = {'NewClientForm':NewClientForm, 'EditClientForm':EditClientForm, 'ClientSearchForm':ClientSearchForm, 'NoteToClientAddForm':NoteToClientAddForm, 'UserCreationFormMY':UserCreationFormMY}
+forms_ENG = {'NewClientForm':NewClientForm_ENG, 'EditClientForm':EditClientForm_ENG, 'ClientSearchForm':ClientSearchForm_ENG, 'NoteToClientAddForm':NoteToClientAddForm_ENG, 'UserCreationFormMY':UserCreationFormMY_ENG}
+l_forms = {'ru':forms_RUS,
+           'eng':forms_ENG,
+    }
+
 
 def set_last_activity(login,url):
     set_last_activity_model(login,url,url_not_to_track,url_one_record)
@@ -59,7 +66,7 @@ def new_client(request):
             #set_last_activity(user,request.path)
             return HttpResponseRedirect("/client_claims/"+str(c.id))
     else:
-        form = NewClientForm()
+        form = l_forms[lang]['NewClientForm']()
     #set_last_activity(user,request.path)
     return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))
 
@@ -157,45 +164,45 @@ def client_claims(request,client_id):
         #set_last_activity(user,request.path)
         return HttpResponseRedirect(request.get_full_path())
     else:
-        form = NewClaimForm()
+        #form = NewClaimForm()
     #set_last_activity(user,request.path)
     # Рисуем историю заказов
-    claims=''
-    try:
-        claims=Claim.objects.filter(for_client=client_full).order_by('-date_of_claim')
-    except Claim.DoesNotExist:
-        pass
-    for c in claims:
-        c.description=u''
-        full_pay=0
-        got_pay=0
-        ms=Mezuza.objects.filter(for_claim=c)
-        c.description+=u'%s мезуз\n' % len(ms)
-        for m in ms:
-            full_pay+=m.payment
-            #got_pay+=m.get_cash            
-        ts=Tfilin.objects.filter(for_claim=c)
-        c.description+=u'%s тфилинов\n' % len(ts)
-        for t in ts:
-            full_pay+=t.payment
-            #got_pay+=t.get_cash
+        claims=''
         try:
-            b=Bdikot.objects.get(for_claim=c)
-            c.description+=u'%s проверок мезуз/тфилинов\n' % (len(b.of_what.split(';'))-1)
-            full_pay+=b.payment
-            #got_pay+=t.get_cash
-        except Bdikot.DoesNotExist:
+            claims=Claim.objects.filter(for_client=client_full).order_by('-date_of_claim')
+        except Claim.DoesNotExist:
             pass
-        c.rest_cash = int(full_pay-c.get_cash-c.discount)
-        c.payment = full_pay-c.discount
-    # Для нового счёта: работники, имеющиеся активные мезузы и тфилины
-    workers=Person.objects.all()
-    mezuzas = Mezuza.objects.filter(owner=client_full).filter(gniza=False)
-    tfilins = Tfilin.objects.filter(owner=client_full).filter(gniza=False)
-    can_bdika=False
-    if mezuzas or tfilins:
-        can_bdika=True
-    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins,'form':form, 'method':method,'claims':claims},RequestContext(request))
+        for c in claims:
+            c.description=u''
+            full_pay=0
+            got_pay=0
+            ms=Mezuza.objects.filter(for_claim=c)
+            c.description+=u'%s мезуз\n' % len(ms)
+            for m in ms:
+                full_pay+=m.payment
+                #got_pay+=m.get_cash            
+            ts=Tfilin.objects.filter(for_claim=c)
+            c.description+=u'%s тфилинов\n' % len(ts)
+            for t in ts:
+                full_pay+=t.payment
+                #got_pay+=t.get_cash
+            try:
+                b=Bdikot.objects.get(for_claim=c)
+                c.description+=u'%s проверок мезуз/тфилинов\n' % (len(b.of_what.split(';'))-1)
+                full_pay+=b.payment
+                #got_pay+=t.get_cash
+            except Bdikot.DoesNotExist:
+                pass
+            c.rest_cash = int(full_pay-c.get_cash-c.discount)
+            c.payment = full_pay-c.discount
+        # Для нового счёта: работники, имеющиеся активные мезузы и тфилины
+        workers=Person.objects.all()
+        mezuzas = Mezuza.objects.filter(owner=client_full).filter(gniza=False)
+        tfilins = Tfilin.objects.filter(owner=client_full).filter(gniza=False)
+        can_bdika=False
+        if mezuzas or tfilins:
+            can_bdika=True
+    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins, 'method':method,'claims':claims},RequestContext(request))
 @login_required
 def edit_claim(request,claim_id):
     lang=select_language(request)
@@ -416,7 +423,7 @@ def register(request):
             new_person.save()
             return HttpResponseRedirect("/")
     else:
-        form = UserCreationFormMY()
+        form = l_forms[lang]['UserCreationFormMY']()
     return render_to_response("registration/register.html",{'form':form},RequestContext(request))
 @login_required    
 def profile(request):
@@ -587,7 +594,7 @@ def client(request,client_id):
                     return HttpResponseRedirect(request.get_full_path())
 
         else:
-            form = NoteToClientAddForm()
+            form = l_forms[lang]['NoteToClientAddForm']()
             for note in notes:
                 note.note = htmlize(note.note)
             #set_last_activity(user,request.path)
@@ -777,7 +784,7 @@ def edit_client(request,client_id):
             client.save()
             return HttpResponseRedirect("/client/"+str(client.id))
     else:
-        form = EditClientForm({'fio':client.fio,
+        form = l_forms[lang]['EditClientForm']({'fio':client.fio,
                             'description':client.description,
                             'entering_date':client.entering_date,
                             'exiting_date':client.exiting_date,
@@ -873,7 +880,7 @@ def all_clients(request):
             #set_last_activity(user,request.path)
             return render_to_response(languages[lang]+'all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method},RequestContext(request))
     else:
-        form = ClientSearchForm()
+        form = l_forms[lang]['ClientSearchForm']()
         if request.session.get('my_error'):
             my_error = [request.session.get('my_error'),]
         else:

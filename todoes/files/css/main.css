@@ -1,0 +1,554 @@
+.leftstr, .rightstr {
+	float: left; /* Обтекание справа */ 
+	width: 50%; /* Ширина текстового блока */ 
+}
+.rightstr {
+	text-align: right; /* Выравнивание по правому краю */ 
+}
+.author {
+	text-align: right; /* Выравнивание по правому краю */ 
+	width: 100%;
+}
+
+.main{
+    width:1000px;
+    color:#999999;
+    font-size: 16px;
+    font-family: tahoma;
+}
+.header{
+    background:#edeeef; 
+    padding: 25 25 10 25;
+    height: 18px;
+    /* высота в сумме 97-34 */
+    font: 16px tahoma;
+    color: black;
+}
+.header_big{
+    background:#edeeef; 
+    padding: 25 25 10 25;
+    height: 52px;
+    /* высота в сумме 97 */
+    font: 16px tahoma;
+    color: black;
+}
+.version{
+	position: absolute;
+	top: 33px;
+	left: 922px;
+}
+.version a{
+color:#999999;
+}
+.hello {
+	position: absolute;
+	top: 33px;
+	left: 33px;
+}
+.to_main {
+	position: absolute;
+	top: 33px;
+	left: 659px;
+}
+.logout {
+	position: absolute;
+	top: 33px;
+	left: 769px;
+}
+.language {
+	position: absolute;
+	top: 33px;
+	left: 840px;
+}
+.separator{
+	background: #edeeef; /* Для старых браузров */
+    background: -moz-linear-gradient(top, #edeeef, #cecece); /* Firefox 3.6+ */
+    /* Chrome 1-9, Safari 4-5 */
+    background: -webkit-gradient(linear, left top, left bottom, 
+                color-stop(0%,#edeeef), color-stop(100%,#cecece));
+    /* Chrome 10+, Safari 5.1+ */
+    background: -webkit-linear-gradient(top, #edeeef, #cecece);
+    background: -o-linear-gradient(top, #edeeef, #cecece); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #edeeef, #cecece); /* IE10 */
+    background: linear-gradient(top, #edeeef, #cecece); /* CSS3 */ 
+    height: 10px;
+}
+.button{
+	border: 1px solid white;
+	outline: 1px solid #cccccc;
+	background: #ebebeb;
+    background: -moz-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ebebeb), 
+                color-stop(36%,#f4f4f4), color-stop(100%,#ebebeb));
+    background: -webkit-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -o-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -ms-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    padding: 10px 10px; /* Поля вокруг текста */
+
+}
+.for_button input[type=button]{
+	border: 1px solid white;
+	outline: 1px solid #cccccc;
+	background: #ebebeb;
+    background: -moz-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ebebeb), 
+                color-stop(36%,#f4f4f4), color-stop(100%,#ebebeb));
+    background: -webkit-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -o-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: -ms-linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    background: linear-gradient(top, #ebebeb 0%, #f4f4f4 36%, #ebebeb 100%);
+    padding: 10px 10px; /* Поля вокруг текста */
+
+}
+.button a{
+	color: black;
+	text-decoration:none;
+}
+.add_client{
+	width: 140px;
+	top: 110px;
+	left: 200px;
+	position: absolute;
+}
+.add_manager{
+	width: 236px;
+	top: 110px;
+	left: 600px;
+	position: absolute;
+}
+.hr1{
+	top: 170px;
+	margin: 0px 20px 0px 20px;
+	position: absolute;
+	width:960px;
+}
+.hr1 hr{
+	border: 0;
+	color: #cecece;
+	background-color: #cecece;
+	height: 1px;
+}
+.table_separator hr{
+	border-top: 1px dotted grey;
+	/*color: grey;
+	background-color: grey;
+	height: 1px;*/
+	width:960px;
+	margin: 0px 0px 0px 0px;
+}
+.table_header_separator hr{
+	border-top: 2px solid black;
+	width:960px;
+	margin: 0px 0px 0px 0px;
+}
+.clients{
+	top: 200px;
+	position: absolute;
+	width: inherit;
+}
+.footer_links{
+	/*position: absolute;*/
+	padding-top:30px;
+	bottom: 30px;
+	text-align: center;
+	width: inherit;
+}
+.clients_title{
+	color:#cc0000;
+	text-align: center;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+.title_20px{
+	color:#cc0000;
+	text-align: center;
+	font-weight: bold;
+	margin-bottom: 20px;
+	margin-top: 20px;
+}
+.header_title_left{
+	width: 350px;
+	height:34px;
+	top: 70px;
+	left: 25px;
+	position: absolute;
+	text-align: center;
+	padding: 0px 0px 0px 0px;
+	border: 1px solid white;
+	background: #edeeef; /* Для старых браузров */
+    background: -moz-linear-gradient(top, #edeeef, #cecece); /* Firefox 3.6+ */
+    /* Chrome 1-9, Safari 4-5 */
+    background: -webkit-gradient(linear, left top, left bottom, 
+                color-stop(0%,#edeeef), color-stop(100%,#cecece));
+    /* Chrome 10+, Safari 5.1+ */
+    background: -webkit-linear-gradient(top, #edeeef, #cecece);
+    background: -o-linear-gradient(top, #edeeef, #cecece); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #edeeef, #cecece); /* IE10 */
+    background: linear-gradient(top, #edeeef, #cecece); /* CSS3 */ 
+}
+.header_title_right{
+	width: 575px;
+	height:34px;
+	top: 70px;
+	left: 400px;
+	position: absolute;
+	text-align: center;
+	border: 1px solid white;
+	background: #edeeef; /* Для старых браузров */
+    background: -moz-linear-gradient(top, #edeeef, #cecece); /* Firefox 3.6+ */
+    /* Chrome 1-9, Safari 4-5 */
+    background: -webkit-gradient(linear, left top, left bottom, 
+                color-stop(0%,#edeeef), color-stop(100%,#cecece));
+    /* Chrome 10+, Safari 5.1+ */
+    background: -webkit-linear-gradient(top, #edeeef, #cecece);
+    background: -o-linear-gradient(top, #edeeef, #cecece); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #edeeef, #cecece); /* IE10 */
+    background: linear-gradient(top, #edeeef, #cecece); /* CSS3 */ 
+
+}
+.header_title_center{
+	width: 950px;
+	height:34px;
+	top: 70px;
+	left: 25px;
+	position: absolute;
+	text-align: center;
+	border: 1px solid white;
+	background: #edeeef; /* Для старых браузров */
+    background: -moz-linear-gradient(top, #edeeef, #cecece); /* Firefox 3.6+ */
+    /* Chrome 1-9, Safari 4-5 */
+    background: -webkit-gradient(linear, left top, left bottom, 
+                color-stop(0%,#edeeef), color-stop(100%,#cecece));
+    /* Chrome 10+, Safari 5.1+ */
+    background: -webkit-linear-gradient(top, #edeeef, #cecece);
+    background: -o-linear-gradient(top, #edeeef, #cecece); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #edeeef, #cecece); /* IE10 */
+    background: linear-gradient(top, #edeeef, #cecece); /* CSS3 */ 
+	color: black;
+	font-weight: bold;
+}
+/*убираем вертикальные границы в таблицах*/
+.clients TABLE {
+	/*width: 300px; /* Ширина таблицы */
+	width: inherit;
+	border: 0px solid white; /* Рамка вокруг таблицы */
+	border-bottom: none; /* Убираем линию снизу */
+	margin: 0px 20px 0px 20px;
+	text-align: center;
+}
+.clients TD, TH {
+	padding: 3px; /* Поля вокруг содержимого ячеек */
+}
+.clients TH {
+	/*text-align: left; /* Выравнивание по левому краю */
+	/*background: black; /* Цвет фона */
+	/*color: white; /* Цвет текста */
+	border: 0px solid white; /* Рамка вокруг ячеек */
+}
+.clients TD {
+	border-bottom: 0px solid white; /* Линия снизу */
+}
+.avatars{
+	margin-left: 25px;
+	margin-right: 25px;
+	margin-top: 10px;
+	width: 106px;
+}
+.client_info{
+	position: absolute;
+	top: 115px;
+	left: 156px;
+	/*text-align: center;*/
+	width: 223px;
+}
+.client_info TABLE{
+	text-align: left;
+	border: 0px;
+}
+.client_info TD{
+	padding: 5px 1px;
+	border: 0px;
+}
+.client_info TH{
+	color: red;
+	border: 0px;
+}
+.comments{
+	position: absolute;
+	/*top: 115px;*/
+	left: 400px;
+	/*text-align: center;*/
+	width: 575px;
+}
+.client_description{
+	position: absolute;
+	top: 115px;
+	left: 400px;
+	/*text-align: center;*/
+	width: 575px;
+	color:red;
+}
+.client_description p{
+	margin-bottom: 10px;
+}
+.comment_buttons{
+	padding-left:80px;
+    float:left;
+	width:455px;
+}
+.author{
+	color:grey;
+	font-size: 14px;
+    /*float:left;*/
+}
+.button_payment	{
+	cursor: pointer;
+}
+.edit_comment{
+	background-image: url(/media/icons/order_history_edit.jpg);
+    width: 17px;
+    height: 17px;
+    border: 0px;
+    float:left;
+}
+.delete_comment{
+	background-image: url(/media/icons/client_photo_delete.jpg);
+    width: 22px;
+    height: 20px;
+    border:0px;
+    float:left;
+}
+.button_as_link input[type=button] {
+    background:none!important;
+    border:none; 
+    padding:0!important;
+    /*border is optional*/
+    border-bottom:1px solid #444; 
+    color: blue;
+    border-color: blue;
+    font-size: 14px;
+    font-family: tahoma;
+    float:left;
+	height: 16px;
+}
+.button_as_link input[type=submit] {
+    background:none!important;
+    border:none; 
+    padding:0!important;
+    /*border is optional*/
+    border-bottom:1px solid #444; 
+    color: blue;
+    border-color: blue;
+    font-size: 16px;
+    font-family: tahoma;
+    float:left;
+	height: 18px;
+	margin-left: 0;
+}
+.comment_separator{
+	padding-top:15px;
+	padding-bottom:15px;
+}
+.comment_table{
+	border:0px;
+}
+label[for=id_note]{
+	display:none;
+}
+#id_answer_note{
+	width:100%;
+}
+.client_links p{
+	margin-bottom: 3px;
+	margin-top: 3px;
+}
+.client_links{
+	margin-top: 10px;
+}
+.for_button{
+	padding-top: 30px;
+	padding-bottom: 30px;
+}
+.add_claim{
+	width: 98px;
+/*	top: 110px;*/
+	left: 300px;
+	position: relative;*/
+}
+.add_worker{
+	width: 144px;
+/*	top: 110px;*/
+	left: 500px;
+	position: relative;*/
+}
+.separator_grey hr{
+	color: #999999;
+	margin-left: 25px;
+	margin-right: 25px;
+	margin-top:0px;
+	margin-bottom:0px;
+}
+/*убираем вертикальные границы в таблицах*/
+.claims{
+	padding-left: 25px;
+	padding-right: 25px;
+	width: 950px;
+}
+.claims TABLE {
+	/*width: 300px; /* Ширина таблицы */
+	width: inherit;
+	border: 0px solid white; /* Рамка вокруг таблицы */
+	border-bottom: none; /* Убираем линию снизу */
+	margin: 0px 20px 0px 20px;
+	text-align: center;
+}
+.claims TD, TH {
+	padding: 3px; /* Поля вокруг содержимого ячеек */
+}
+.claims TH {
+	/*text-align: left; /* Выравнивание по левому краю */
+	/*background: black; /* Цвет фона */
+	/*color: white; /* Цвет текста */
+	border: 0px solid white; /* Рамка вокруг ячеек */
+}
+.claims TD {
+	border-bottom: 0px solid white; /* Линия снизу */
+}
+.new_worker_table TABLE{
+	border: 1px solid black;
+}
+.new_worker_table {
+	padding-top: 30px;
+	padding-bottom: 30px;
+	padding-left: 25px;
+	padding-right: 25px;
+}
+.new_worker_tr {
+	width:950px;
+	height:20px;
+}
+#id_username{
+	left:220px;
+	position:absolute;
+	width:324px;
+}
+#id_password1{
+	left:220px;
+	position:absolute;
+	width:324px;
+}
+#id_password2{
+	left:220px;
+	position:absolute;
+	width:324px;
+}
+#id_fio{
+	left:220px;
+	position:absolute;
+	width:745px;
+}
+#id_mail{
+	left:220px;
+	position:absolute;
+	width:324px;
+}
+#id_tel{
+	left:220px;
+	position:absolute;
+	width:324px;
+}
+.helptext{
+	position:absolute;
+	left:555px;
+	font-size:12px;
+	width: 454px;
+}
+#new_worker_submit{
+	position: relative;
+	left: 565px;
+	top: -63px;
+	height:20px;
+	padding-top:1px;
+	padding-bottom:1px;
+}
+#new_claim_submit{
+	position: relative;
+	left: 280px;
+	top: -32px;
+	height:20px;
+	padding-top:1px;
+	padding-bottom:1px;
+}
+#add_mezuza_button{
+	left:350px;
+	position:relative;
+}
+#add_tfilin_button{
+	left:400px;
+	position:relative;
+}
+#add_bdika_button{
+	left:450px;
+	position:relative;
+}
+#get_cash{
+	position:absolute;
+	left:145px;
+}
+#discount{
+	position:absolute;
+	left:145px;
+}
+#claim_shared_fields input[type=number]{
+	margin-bottom:8px;
+}
+#new_claim{
+	color:black;
+}
+#new_worker{
+	color:black;
+}
+#new_claim{
+	padding-left:25px;
+	width:950px;
+}
+/*.mt_desc_label{
+	position:relative;
+	left:20px;
+}
+.mt_desc_input{
+	position:relative;
+	left:px;
+}
+.mt_worker_label{
+	position:relative;
+	left:25px;
+}
+.mt_work_input{
+	position:relative;
+	left:px;
+}
+.mt_price_label{
+	position:relative;
+	left:30px;
+}
+.mt_price_input{
+	position:relative;
+	left:px;
+}
+.mt_remove{
+	position:relative;
+	left:40px;
+}*/
+.mt_name{
+	/*width:120px;*/
+	font-weight: bold;
+}
+#claim_content{
+	padding:5px;
+}
+.claim_content_td{
+	padding-left: 5px;
+	padding-right: 5px;
+}

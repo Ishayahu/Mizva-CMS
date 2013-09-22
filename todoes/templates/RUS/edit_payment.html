@@ -1,33 +1,344 @@
-{% extends "RUS/base.html" %}
+{% extends "RUS/base_big.html" %}
 {% block title %}
     Редактирование заказа: {{claim.id}}
 {% endblock %}
 {% block style %}
-    <style>
-       .leftstr, .rightstr {
-        float: left; /* Обтекание справа */ 
-        width: 50%; /* Ширина текстового блока */ 
-       }
-       .rightstr {
-        text-align: right; /* Выравнивание по правому краю */ 
-       }
-       .author {
-        text-align: right; /* Выравнивание по правому краю */ 
-        width: 100%;
-       }
-       @page {size:'landscape;'} 
-      </style>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script>
+        function send(url,form_id,tr_id,result_div) {
+        // Отсылаем паметры
+        $.ajax({
+                type: "POST",
+                url:  url,
+                data: $("#"+form_id).serialize(),
+                // Выводим то что вернул PHP
+                success: function(html)
+                {
+                        $("#"+tr_id).empty();
+                        $("#"+tr_id).append(html);
+                },
+                error: function()
+                {
+                    $("#"+result_div).empty();
+                    $("#"+result_div).append("Ошибка!");
+                }
+                }); 
+        }
+        function new_worker() {
+            $("#new_worker").show()
+            $("#new_worker").load("/new_worker/", function (result) {
+                //$("#new_worker").hide();
+                //location.reload();
+                                                    }
+            )
+        }
+        var m=1
+        var t=1
+        function div_remove(item_type,item_id,id){
+            if (confirm("Вы уверены, что хотите удалить элемент заказа?")) {
+                $(id).load('/api/delete/'+item_type+'/'+item_id+'/',function(result){
+                    console.log("hura!");
+                    $(id).remove()}
+                )
+            } else {
+                return false
+            }
+            //$(id).remove()
+        }
+        function edit_item(item_type,item_id,id){
+            //$(id).empty()
+            $(id).load('/api/edit/'+item_type+'/'+item_id+'/')
+        }
+		{% comment %}
+        function new_mezuza(){
+            claim_content= $("#claim_content")
+            //var html = claim_content.html();
+            var html=''
+            html+='<div id="mezuza_'+m+'">Мезуза №'+m+': <label>Описание/Место<input type="text" name="mezuza_desc_'+m+'"></label>\n';
+            html+='<label>Исполнитель<select name="mezuza_worker_'+m+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Цена<input type="number" class="notcheck" name="mezuza_payment_'+m+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_mezuzot").attr("value",m)
+            m++;
+        }
+        function new_tfilin(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            html+='<div id="tfilin_'+m+'">Тфилин №'+t+': <label>Описание/Место<input type="text" name="tfilin_desc_'+t+'"></label>\n';
+            html+='<label>Исполнитель<select name="tfilin_worker_'+t+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Цена<input type="number" class="notcheck" name="tfilin_payment_'+t+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_tfilins").attr("value",t)
+            t++;
+        }
+		function bdikot(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            {% for item in mezuzas %}
+                 html+='<label>Мезуза {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}"></label>\n';
+                 html+='<label>Цена<input type="number" class="check" id="mezuza_{{item.id}}_payment"></label>\n<br />';
+            {% endfor %}
+            {% for item in tfilins %}
+                 html+='<label>Тфилин {{item.description}}: <input type="checkbox" name="tfilin_{{item.id}}"></label>\n';
+                 html+='<label>Цена<input type="number" class="check" id="tfilin_{{item.id}}_payment"></label>\n<br />';            
+            {% endfor %}
+            html+='<label>Исполнитель<select name="bdikot_worker">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            
+            //claim_content.html(html);
+            claim_content.append(html);
+            t++;
+        }
+
+		{% endcomment %}
+		function new_mezuza(){
+            claim_content= $("#claim_content")
+            //var html = claim_content.html();
+            var html=''
+            html+='<tr id="mezuza_'+m+'"><td class="claim_content_td"><span class="mt_name">Мезуза №'+m+': </span></td><td class="claim_content_td"><label class="mt_desc_label">Описание/Место</label></td><td><input class="mt_desc_input" type="text" name="mezuza_desc_'+m+'">\n';
+            html+='</td><td class="claim_content_td"><label class="mt_worker_label">Исполнитель</label></td><td class="claim_content_td"><select class="mt_work_input" name="mezuza_worker_'+m+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select>\n';
+            html+='</td><td class="claim_content_td"><label class="mt_price_label">Цена</label><input type="number" class="mt_price_input" class="notcheck" name="mezuza_payment_'+m+'">\n';
+            {# html+='</td><td class="claim_content_td"><input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>'; #}
+			html+='</td><td class="claim_content_td"><a class="mt_remove" onclick=\'div_remove("#mezuza_'+m+'")\' ><img src="/media/icons/client_photo_delete.jpg" style="cursor: pointer;position: relative;top: 4;" /></a></td></tr>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_mezuzot").attr("value",m)
+            m++;
+        }
+        function new_tfilin(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            html+='<tr id="tfilin_'+m+'"><td class="claim_content_td"><span class="mt_name">Тфилин №'+t+': </span></td><td class="claim_content_td"><label class="mt_desc_label">Описание/Место</label></td><td><input class="mt_desc_input" name="tfilin_desc_'+t+'">\n';
+            html+='</td><td class="claim_content_td"><label class="mt_worker_label">Исполнитель</label></td><td class="claim_content_td"><select class="mt_work_input" name="tfilin_worker_'+t+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='</td><td class="claim_content_td"><label class="mt_price_label">Цена</label><input type="number" class="mt_price_input" class="notcheck" name="tfilin_payment_'+t+'">\n';
+            {# html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';#}
+			html+='</td><td class="claim_content_td"><a onclick=\'div_remove("#tfilin_'+m+'")\' ><img src="/media/icons/client_photo_delete.jpg" style="cursor: pointer;position: relative;top: 4;" /></a></td></tr>';
+            //claim_content.html(html);
+			console.log(html)
+            claim_content.append(html);
+            $("#number_of_tfilins").attr("value",t)
+            t++;
+        }
+		function bdikot(){
+			claim_content= $("#claim_content")
+			var html='<tr></tr>'
+			//var html = claim_content.html();
+			{% for item in mezuzas %}
+				 html+='<tr><td><span class="mt_name">Мезуза {{item.description}}: </span></td><td><input type="checkbox" name="mezuza_{{item.id}}"></td>\n';
+				 html+='<td><label>Цена</label></td><td><input type="number" class="check" id="mezuza_{{item.id}}_payment"></td></tr>';
+			{% endfor %}
+			{% for item in tfilins %}
+				 html+='<tr><td><span class="mt_name">Тфилин {{item.description}}: </span></td><td><input type="checkbox" name="tfilin_{{item.id}}"></td>\n';
+				 html+='<td><label>Цена</label></td><td><input type="number" class="check" id="tfilin_{{item.id}}_payment"></td></tr>';            
+			{% endfor %}
+			html+='<tr><td><span class="mt_name">Исполнитель</span></td><td><select name="bdikot_worker">';
+			{% for worker in workers %}
+				html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+			{% endfor %}
+			html+='</select></td></tr>';
+			
+			//claim_content.html(html);
+			claim_content.append(html);
+			t++;
+		}
+        function isNumber(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n) && parseFloat(n)>=0;
+        }
+        
+        $(document).ready(function(){
+            $('#myform').bind('submit', function(event) {
+                //$('[type=number]').each(function() {
+                //        $(this).css('border', '1px solid black');
+                //});
+                //var valid=true
+                $('[type=number][class=notcheck]').each(function() {
+                    if(!isNumber($(this).val())) {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid red');
+                        //valid=false
+                    }
+                });
+                //$('[type=number][class=check][]').each(function() {
+                //    if(!isNumber($(this).val())) {
+                //        event.preventDefault();
+                //        $(this).css('border', '2px solid green');
+                //    }
+                //});
+                //$('[type=text]').each(function() {
+                //        $(this).css('border', '1px solid black');
+                //});
+                $('[type=text]').each(function() {
+                    if($(this).val()=='') {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid blue');
+                        //valid=false
+                    }
+                });
+                var b_txt='';
+                console
+                $('[type=checkbox]').each(function(){
+                    if ($(this).is(':checked')) {
+                        payment = "#"+$(this).attr('name')+"_payment"
+                        if (!isNumber($(payment).val())) {
+                            event.preventDefault();
+                            $(payment).css('border', '2px solid green');                        
+                            //valid=false
+                        } else {
+                        b_txt=b_txt+$(this).attr('name')+','+$(payment).val()+";"
+                        }
+                    }
+                });
+                $("#bdikot_text").val(b_txt)
+            });
+        });
+    function send(url,form_id,result_div) {
+        // Отсылаем паметры
+        $.ajax({
+                type: "POST",
+                url:  url,
+                data: $("#"+form_id).serialize(),
+                // Выводим то что вернул PHP
+                success: function(html)
+                {
+                        $("#"+result_div).empty();
+                        $("#"+result_div).append(html);
+                        // скрываем форму поставщика, открываем заказа и т.п.
+                        $("#new_worker").empty()
+                        $("#new_worker").hide()
+                },
+                error: function()
+                {
+                    $("#"+result_div).empty();
+                    $("#"+result_div).append("Ошибка!");
+                }
+        });     
+            }
+    </script>
 {% endblock %}
 {% block content %}
-    {% if form.errors %}
-       {{form.errors}} 
-    {% endif %}
-    
-    <form method='post' action=''>
-    {% csrf_token %}
-    <table border=1>
-        {{form.as_table}}
-    </table>
-        <input type="submit" value="Готово" name="edited" /> 
+
+	<div class="header_title_center">
+		Редактирование заказа: {{claim.id}}
+	</div>
+    <div id="message">
+	</div>
+	<div class="for_button">
+		<input class="add_worker" type="button" title='Добавить нового исполнителя' onclick='new_worker()' value="Новый исполнитель" />
+    </div>
+	<div class="separator_grey">
+		<hr />
+	</div>
+    <div id="new_claim">
+		<div class="title_20px">
+			Добавление к заказу
+		</div>
+        <div class='error'></div>
+        <input class="button" id="add_mezuza_button" type="button" title='Добавить мезузу' onclick='new_mezuza()' value="+Мезуза" />
+        <input class="button" id="add_tfilin_button" type="button" title='Добавить тфилин' onclick='new_tfilin()' value="+Тфилин" />
+        <input class="button" id="add_bdika_button" type="button" title='Добавить проверки' onclick='bdikot()' value="+Проверки" />
+        <form action="" method='post' id='myform'>
+            {% csrf_token %}
+            <div id='claim_content'>
+            
+            </div>
+			<div id="claim_shared_fields">
+				<input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
+				<input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
+				<input type="hidden" id="bdikot_text" name="bdikot_text" value="0" />
+				<label>Внесено денег</label><input id="get_cash" type="number" name="get_cash" value=0><p></p>
+				<label>Скидка</label><input type="number" id="discount" name="discount" value=0><p></p>
+				<input id="new_claim_submit" class="button" type="submit" value="Отправить" name="done" />
+			</div>
+        </form>
+		<div class="separator_grey">
+			<hr />
+		</div>
+    </div>
+	<div id="new_worker" style="display: none;"></div>
+
+    <br />
+
+    <form method="post" id="asset_edition_form">
+		<div class="claims">
+			<div class="clients_title">
+				Состав заказа
+			</div>
+
+			<table>
+				<tr>
+					<th>№№</th>
+					<th>Описание/Место</th>
+					<th>Исполнитель</th>
+					<th>Цена</th>
+					<th></th>
+				</tr>
+			<tr>
+				<td colspan=5>
+					<div class="table_header_separator"><hr /></div>
+				</td>
+			</tr>
+				{% for item in mezuzot %}
+					<tr id="mezuza_{{item.id}}">
+						<td>Мезуза №{{item.id}}</td>
+						<td>{{item.description}}</td>
+						<td>{{item.worker.fio}}</td>
+						<td>{{item.price}}</td>
+						<td>
+							<a onclick="edit_item('mezuza',{{item.id}},'#mezuza_{{item.id}}')" title="Редактировать"><img src="/media/icons/order_history_edit.jpg" /></a>
+							<a title='Удалить счёт' onclick="div_remove('mezuza',{{item.id}},'#mezuza_{{item.id}}')"><img src="/media/icons/client_photo_delete.jpg" /></a>
+							{% comment %}
+								<input type="button" onclick="div_remove('mezuza',{{item.id}},'#mezuza_{{item.id}}')" value="x">
+								<input type="button" onclick="edit_item('mezuza',{{item.id}},'#mezuza_{{item.id}}')" value="&#9998;">
+							{% endcomment %}
+						</td>
+					</tr>
+				{% endfor %}
+				{% for item in tfilins %}
+					<tr id="tfilin_{{item.id}}">
+						<td>Тфилин №{{item.id}}</td>
+						<td>{{item.description}}</td>
+						<td>{{item.worker.fio}}</td>
+						<td>{{item.price}}</td>
+						<td>
+							<a onclick="edit_item('tfilin',{{item.id}},'#tfilin_{{item.id}}')" title="Редактировать"><img src="/media/icons/order_history_edit.jpg" /></a>
+							<a title='Удалить счёт' onclick="div_remove('tfilin',{{item.id}},'#tfilin_{{item.id}}')"><img src="/media/icons/client_photo_delete.jpg" /></a>
+							{% comment %}
+								<input type="button" onclick="div_remove('tfilin',{{item.id}},'#tfilin_{{item.id}}')" value="x">
+								<input type="button" onclick="edit_item('tfilin',{{item.id}},'#tfilin_{{item.id}}')" value="&#9998;">
+							{% endcomment %}
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
     </form>
+    
+
+
 {% endblock %}

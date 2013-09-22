@@ -38,7 +38,13 @@ l_forms = {'ru':forms_RUS,
            'eng':forms_ENG,
     }
 
-
+def save_file(files,id):
+    instanse = File(file=files['file'],
+                    timestamp=datetime.datetime.now(),
+                    file_name = 'avatar '+str(id),
+                    description = 'avatar for '+str(id),)
+    instanse.save()
+    return instanse
 def set_last_activity(login,url):
     set_last_activity_model(login,url,url_not_to_track,url_one_record)
 
@@ -54,6 +60,9 @@ def new_client(request):
     if request.method == 'POST':
         form = NewClientForm(request.POST)
         if form.is_valid():
+            # проверка - есть ли файл надо добавить
+
+
             data = form.cleaned_data
             c=Client(fio=data['fio'], 
                     tel = data['tel'],
@@ -68,6 +77,9 @@ def new_client(request):
                     home_tel = data['home_tel'],
                     address = data['address'])
             c.save()
+            if request.FILES:
+                c.file.add(save_file(request.FILES,c.id))
+            c.save()
             # отправляем уведомление исполнителю по мылу
             #send_email_alternative(u"Новая задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/one_time/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
             #set_last_activity(user,request.path)
@@ -75,7 +87,7 @@ def new_client(request):
     else:
         form = l_forms[lang]['NewClientForm']()
     #set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
 
 @login_required
 def client_claims(request,client_id):
@@ -209,7 +221,7 @@ def client_claims(request,client_id):
         can_bdika=False
         if mezuzas or tfilins:
             can_bdika=True
-    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins, 'method':method,'claims':claims},RequestContext(request))
+    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'client':client_full,'worker':fio,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins, 'method':method,'claims':claims,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
 @login_required
 def edit_claim(request,claim_id):
     lang=select_language(request)
@@ -239,42 +251,177 @@ def edit_claim(request,claim_id):
         full_pay+=b.payment
     for m in ms:
         full_pay+=m.payment
+        m.price = str(m.payment).replace(',','.')
     for t in ts:
         full_pay+=t.payment
+        t.price = str(t.payment).replace(',','.')
     c.rest_cash = full_pay-c.get_cash-c.discount
     c.payment = full_pay-c.discount
     c.full_pay=full_pay
     
+    workers=Person.objects.all()
     
     if request.method == 'POST':
-        form = EditClaimForm(request.POST)
+        client_full = c.for_client.get()
+        number_of_mezuzot = request.POST['number_of_mezuzot']
+        number_of_tfilins = request.POST['number_of_tfilins']
+        # c = Claim(discount = request.POST['discount'],
+                    # date_of_claim = datetime.datetime.now(),
+                    # get_cash = request.POST['get_cash'],
+                    # )
+        if int(float(request.POST['get_cash'])) != int(float(c.get_cash)):
+            c.date_of_payment = datetime.datetime.now()
+            c.get_cash = int(float(request.POST['get_cash']))
+        if request.POST['discount'] != 0:
+            c.discount = int(float(request.POST['discount']))
+        c.save()
+        # c.for_client.add(client_full)
+        # c.save()
+        # Проходимся по мезузам
+        for i in range(1,int(number_of_mezuzot)+1):
+            if 'mezuza_desc_'+str(i) in request.POST:
+                try:
+                    worker = Person.objects.get(id=request.POST['mezuza_worker_'+str(i)])
+                except Person.DoesNotExist:
+                    worker = False
+                m=Mezuza(description = request.POST['mezuza_desc_'+str(i)],
+                        date_of_last_check = datetime.datetime.now(),
+                        worker = worker,
+                        seller = fio,
+                        owner = client_full,
+                        payment = request.POST['mezuza_payment_'+str(i)],
+                        gniza=False,
+                        )
+                m.save()
+                c.mezuza.add(m)
+        for i in range(1,int(number_of_tfilins)+1):
+            if 'tfilin_desc_'+str(i) in request.POST:
+                try:
+                    worker = Person.objects.get(id=request.POST['tfilin_worker_'+str(i)])
+                except Person.DoesNotExist:
+                    worker = False
+                t=Tfilin(description = request.POST['tfilin_desc_'+str(i)],
+                        date_of_last_check = datetime.datetime.now(),
+                        worker = worker,
+                        seller = fio,
+                        owner = client_full,
+                        payment = request.POST['tfilin_payment_'+str(i)],
+                        gniza=False,
+                        )
+                t.save()
+                c.tfilin.add(t)
+        if "bdikot_text" in request.POST and request.POST['bdikot_text']!=u'':
+            try:
+                worker = Person.objects.get(id=request.POST['bdikot_worker'])
+            except Person.DoesNotExist:
+                worker = False
+            b_txt = request.POST['bdikot_text']
+            b_txt=b_txt.split(';')[:-1]
+            of_what=''
+            payment=0
+            for item in b_txt:
+                w,p = item.split(',')
+                of_what=w+";"
+                payment+=int(p)
+            b=Bdikot(of_what = of_what,
+                    date_of_bdika = datetime.datetime.now(),
+                    seller = fio,
+                    worker = worker,
+                    owner = client_full,
+                    payment = payment
+                    )
+            b.save()
+            c.bdikot.add(b)
+            c.save()
+            item_type = {'mezuza':Mezuza,
+                        'tfilin':Tfilin}
+            for item in b.of_what.split(';')[:-1]:
+                w,n=item.split('_')
+                i = item_type[w].objects.get(id=n)
+                i.date_of_last_check=datetime.datetime.now().replace(year=datetime.datetime.now().year + 1)
+                i.save()
+        return HttpResponseRedirect("/client_claims/"+str(client_full.id))
+    c.get_cash = str(c.get_cash).replace(',','.')
+    c.discount = str(c.discount).replace(',','.')
+    return render_to_response(languages[lang]+'edit_payment.html', {'claim':c,'bdikot':b,'mezuzot':ms,'tfilins':ts,'workers':workers,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
+@login_required
+def delete_asset(request,asset_type,id):
+    lang=select_language(request)
+    item_type = {'mezuza':Mezuza,
+                'tfilin':Tfilin}
+    try:
+        item = item_type[asset_type].objects.get(id=id)
+    except item_type[asset_type].DoesNotExist:
+        pass
+    item.delete()
+    return render_to_response(languages[lang]+'OK.html', {'path':request.path.replace("/","+")},RequestContext(request))
+@login_required
+def edit_asset(request,asset_type,id):
+    lang=select_language(request)
+    item_type = {'mezuza':Mezuza,
+                'tfilin':Tfilin}
+    item_name = {'mezuza':'Мезуза',
+                'tfilin':'Тфилин'}
+    try:
+        item = item_type[asset_type].objects.get(id=id)
+    except item_type[asset_type].DoesNotExist:
+        pass
+    item.name=item_name[asset_type]
+    item.price = str(item.payment).replace(',','.')
+    item.item_type = asset_type
+    item.tr_name = asset_type+'_'+id
+    workers=Person.objects.all()
+    return render_to_response(languages[lang]+'edit_asset.html', {'item':item,'workers':workers,'path':request.path.replace("/","+")},RequestContext(request))
+@login_required
+def save_edited_asset(request,id):
+    lang=select_language(request)
+    item_type = {'mezuza':Mezuza,
+                'tfilin':Tfilin}
+    data = request.POST
+    try:
+        item = item_type[data.get('asset_type')].objects.get(id=id)
+    except item_type[data.get('asset_type')].DoesNotExist, KeyError:
+        pass
+    item.description=data.get('description_'+id)
+    item.worker=Person.objects.get(id=data.get('worker_'+id))
+    item.payment=data.get('payment_'+id)
+    item.save()
+    item_name = {'mezuza':'Мезуза',
+                'tfilin':'Тфилин'}
+    item.name=item_name[data.get('asset_type')]
+    item.price = item.payment
+    item.item_type = data.get('asset_type')
+    return render_to_response(languages[lang]+'edited_asset.html', {'item':item,'path':request.path.replace("/","+")},RequestContext(request))
+    
+    
+    
+    
+@login_required
+def new_worker(request):
+    lang=select_language(request)
+    user = request.user.username
+    try:
+        fio = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        fio = FioError
+    method = request.method
+    if request.method == 'POST':
+        form = UserCreationFormMY(request.POST)
+        # a= form.is_valid()
+        # raise TypeError
         if form.is_valid():
             data = form.cleaned_data
-            # TODO добавить оповещения или вести историю изменений
-            c.number=data['number']
-            c.date_of_claim=data['date_of_claim']
-            c.payment=data['payment']
-            c.get_cash=data['get_cash']
-            c.seller = data['seller']
-            c.worker = data['worker']
-            c.date_of_payment = data['date_of_payment']
-            c.date_of_installation = data['date_of_installation']
+            c=Person(fio=data['fio'], 
+                    tel = data['tel'],
+                    mail = data['mail'],
+                    login = data['username'])
             c.save()
-            # отправляем уведомление исполнителю по мылу
-            #send_email_alternative(u"Новая повторяющаяся задача: "+t.name,t.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/regular/"+str(t.id),[data['workers'].mail,data['clients'].mail],fio)
-            #set_last_activity(user,request.path)
-            return HttpResponseRedirect("/client_claims/"+str(client.id))
+            # raise ImportError
+            return render_to_response(languages[lang]+'OK.html', {'path':request.path.replace("/","+")},RequestContext(request))
     else:
-        form = EditClaimForm({'number' : c.number,
-                            'date_of_claim' : c.date_of_claim,
-                            'date_of_installation' : c.date_of_installation,
-                            'seller' : c.seller,
-                            'worker' : c.worker,
-                            'payment' : c.payment,
-                            'get_cash' : c.get_cash,
-                            'date_of_payment' : c.date_of_payment,
-                            })    
-    return render_to_response(languages[lang]+'edit_payment.html', {'form':form, 'method':method, 'claim':c},RequestContext(request))
+        form = l_forms[lang]['UserCreationFormMY']()
+    return render_to_response(languages[lang]+'new_ticket_headless.html', {'form':form,'form_id':'new_worker', 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
+            
 @login_required
 def debt(request,claim_id,adding):
     try:
@@ -315,7 +462,7 @@ def print_claim(request,claim_id):
     c.rest_cash = full_pay-c.get_cash-c.discount
     c.payment = full_pay-c.discount
     c.full_pay=full_pay
-    return render_to_response(languages[lang]+'print_payment.html', {'now':datetime.datetime.now(),'manager':manager, 'claim':c,'mezuzas':ms,'tfilins':ts,'bdika':b},RequestContext(request))
+    return render_to_response(languages[lang]+'print_payment.html', {'now':datetime.datetime.now(),'worker':manager,'manager':manager, 'claim':c,'mezuzas':ms,'tfilins':ts,'bdika':b,'path':request.path.replace("/","+")},RequestContext(request))
 def delete_claim(request,claim_id):
     user = request.user.username
     try:
@@ -410,9 +557,17 @@ def move_to_call(request,task_type,task_id):
     set_last_activity(user,request.path)
     return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
 @login_required    
-def change_language(request,lang):
+def change_language(request,lang,address_to_return):
     request.session['language']=lang
-    return HttpResponseRedirect('/')
+    if not address_to_return:
+        return HttpResponseRedirect("/")
+    # return HttpResponseRedirect('/')
+    address_to_return = address_to_return.replace("+",'/')
+    return HttpResponseRedirect(address_to_return)
+# @login_required    
+def change_language_root(request,lang):
+    request.session['language']=lang
+    return HttpResponseRedirect("/")
 
 @login_required    
 def register(request):
@@ -432,7 +587,7 @@ def register(request):
             return HttpResponseRedirect("/")
     else:
         form = l_forms[lang]['UserCreationFormMY']()
-    return render_to_response(languages[lang]+"registration/register.html",{'form':form},RequestContext(request))
+    return render_to_response(languages[lang]+"registration/register.html",{'form':form,'path':request.path.replace("/","+")},RequestContext(request))
 @login_required    
 def profile(request):
     user = request.user.username
@@ -471,7 +626,7 @@ def clients(request):
             clients_to_show.add(c.owner)
         #for c in ts:
         #    clients_to_show.add(c.owner_for_tfilin.get())
-        clients_to_show = ''# если задач нет - вывести это в шаблон        
+        # clients_to_show = ''# если задач нет - вывести это в шаблон        
         # получаем кол-во клиентов в этот раз и сравниваем с тем, что было для уведомления всплывающим окном или ещё какой фигней
         
         alert = False
@@ -489,7 +644,7 @@ def clients(request):
             admin = True
             pass
     #set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert},RequestContext(request))
+    return render_to_response(languages[lang]+'tasks.html',{'my_error':my_error,'user':user,'worker':worker,'clients_to_show':clients_to_show,'alert':alert,'path':request.path.replace("/","+")},RequestContext(request))
 @login_required
 def client(request,client_id):
     lang=select_language(request)
@@ -520,6 +675,7 @@ def client(request,client_id):
         # подготовка к выводу
         client_full.html_description = htmlize(client_full.description)
         method = request.method
+        files=client_full.file.all()
         if request.method == 'POST':
             form = NoteToClientAddForm(request.POST)
             if form.is_valid():
@@ -533,15 +689,6 @@ def client(request,client_id):
                     note.save()
                     note.for_client.add(client_full)
                     note.save()
-                    #mails = [person.mail for person in data['workers']]
-                    #acl_list = client_full.acl.split(';')
-                    #for person in data['workers']:
-                    #    if person.login not in acl_list:
-                    #        acl_list.append(person.login)
-                    #client_full.acl = ';'.join(acl_list)
-                    #client_full.save()
-                    #send_email_alternative(u"Новый комментарий к задаче: "+task_full.name,note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://1"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
-                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
                 elif request.POST.get('answer_to_comment'):
                     parent_note = Note.objects.get(id=int(request.POST.get('to_note')))
@@ -553,9 +700,6 @@ def client(request,client_id):
                     note.save()
                     note.parent_note.add(parent_note)
                     note.save()
-                    #mails = (parent_note.author.mail if parent_note.author.mail else '' ,)
-                    #send_email_alternative(u"Ответ на ваш комментарий к задаче: "+task_full.name,u"Ваш комментарий:\n"+parent_note.note+u"\nОтветили:\n"+note.note+u"\nОписание задачи:\n"+task_full.description+u"\nПосмотреть задачу можно тут:\nhttp://"+server_ip+"/task/"+task_addr[task_type]+"/"+str(task_full.id),mails,fio)
-                    #set_last_activity(user,request.path)
                     return HttpResponseRedirect(request.get_full_path())
                 elif request.POST.get('del_comment'):
                     note_to_del_id=request.POST.get('num')
@@ -590,7 +734,7 @@ def client(request,client_id):
                         if note.id != int(note_to_edit_id):
                             note.note = htmlize(note.note)
                     #set_last_activity(user,request.path)
-                    return render_to_response(languages[lang]+'task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id)},RequestContext(request))
+                    return render_to_response(languages[lang]+'task.html',{'files':files,'user':user,'worker':fio,'fio':fio,'task':client_full,'notes':notes, 'form':form,'note_to_edit_id':int(note_to_edit_id),'path':request.path.replace("/","+")},RequestContext(request))
                 elif request.POST.get('save_edited_comment'):
                     note_to_edit_id = request.POST.get('num')
                     note_to_edit = Note.objects.get(id=note_to_edit_id)
@@ -610,7 +754,7 @@ def client(request,client_id):
                 client_full.age=(datetime.datetime.now().date()-client_full.dr).days//365
             if client_full.spouse_dr:
                 client_full.spouse_age=(datetime.datetime.now().date()-client_full.spouse_dr).days//365
-            return render_to_response(languages[lang]+'task.html',{'user':user,'fio':fio,'task':client_full,'notes':notes, 'form':form},RequestContext(request))
+            return render_to_response(languages[lang]+'task.html',{'files':files,'user':user,'fio':fio,'worker':fio,'task':client_full,'notes':notes, 'form':form,'path':request.path.replace("/","+")},RequestContext(request))
     # если задачи нет - возвращаем к списку с ошибкой
     except Client.DoesNotExist:
         # print 'here'
@@ -766,6 +910,19 @@ def confirm_task(request,task_to_confirm_id):
     task_to_confirm.description = htmlize(task_to_confirm.description)
     set_last_activity(user,request.path)
     return render_to_response('confirm_ticket.html', {'form':form,'task':task_to_confirm,'notes':notes,'method':method,'fio':fio},RequestContext(request))    
+    
+@login_required
+def image_delete(request,file_id):
+    lang = select_language(request)
+    file = File.objects.get(id=file_id)
+    client = file.for_client.get()
+    
+    storage, path = file.file.storage, file.file.path
+    storage.delete(path)
+    
+    # raise TabError
+    file.delete()
+    return HttpResponseRedirect("/client/"+str(client.id)+"/")
 @login_required
 def edit_client(request,client_id):
     lang = select_language(request)
@@ -801,6 +958,9 @@ def edit_client(request,client_id):
             client.address=data['address']
             client.home_tel=data['home_tel']
             client.save()
+            if request.FILES:
+                client.file.add(save_file(request.FILES,client.id))
+            client.save()
             return HttpResponseRedirect("/client/"+str(client.id))
     else:
         form = l_forms[lang]['EditClientForm']({'fio':client.fio,
@@ -816,9 +976,10 @@ def edit_client(request,client_id):
                             'spouse_dr':client.spouse_dr,
                             'address':client.address,
                             'home_tel':client.home_tel,
+                            'file':client.file.all(),
                             })
     
-    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'edit_ticket.html', {'worker':fio,'form':form, 'method':method,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
 @login_required
 def delete_task(request,task_type,task_to_delete_id):
     user = request.user.username
@@ -904,7 +1065,7 @@ def all_clients(request):
             if not finded_clients:
                 not_finded = True
             #set_last_activity(user,request.path)
-            return render_to_response(languages[lang]+'all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method},RequestContext(request))
+            return render_to_response(languages[lang]+'all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
     else:
         form = l_forms[lang]['ClientSearchForm']()
         if request.session.get('my_error'):
@@ -918,7 +1079,7 @@ def all_clients(request):
         except:
             tasks = ''# если задач нет - вывести это в шаблон
     #set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method},RequestContext(request))
+    return render_to_response(languages[lang]+'all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
 @login_required
 def add_children_task(request,parent_task_type,parent_task_id):
     method = request.method

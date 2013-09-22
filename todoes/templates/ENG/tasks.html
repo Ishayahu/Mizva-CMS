@@ -1,22 +1,8 @@
 {% extends "ENG/base.html" %}
 {% block title %}
-    Mizvah CMS. Main page
+    Mitzva CMS. Home page
 {% endblock %}
 {% block style %}
-    <style>
-       .leftstr, .rightstr {
-        float: left; /* Обтекание справа */ 
-        width: 50%; /* Ширина текстового блока */ 
-       }
-       .rightstr {
-        text-align: right; /* Выравнивание по правому краю */ 
-       }
-        .center {
-        text-align: center; 
-        width: 100%; /* Ширина текстового блока */ 
-      }
-
-    </style>
     <meta http-equiv="refresh" content="60">
     {# горячие клавиши #}
     <script>
@@ -36,21 +22,20 @@
 {% endblock %}
 
 {% block content %}
-    <div class ="leftstr"><p>Hello, {{ worker.fio }}!</p></div>
-    <div class ="rightstr"><p><a href="/language/ru">ru</a>|<a href="/language/eng">eng</a></p>
-    <p><a target="_new" href="/media/versions.html">v0.0.2</a></p></div>
+
     {% if admin %}
     {% endif %}
     <br />
     {% if alert %}
-        <script>alert("New clients!")</script>
+        <script>alert("New clients alert!")</script>
     {% endif %}
     {% if my_error %}
         {% for error in my_error %}
             <h2>{{error}}</h2><br />
         {% endfor %}
     {% endif %}
-     <p align="center"><a href="/new_client/">Add new client</a></p>
+     <p align="center"><a href="/new_client/">Add client</a></p>
+     <p align="center"><a href="/accounts/register/">Add seller/manager</a></p>
     <table>
         <tr>
             <th>Active clients</th>
@@ -79,9 +64,9 @@
                             {% ifequal client.category.name 'Звонки' %}
                                 &#9743;
                             {% endifequal %}                            
-                            <a href="../client/{{client.id}}" title="{{client.description}}" target="_blank">{{client.fio}}</a> <a href="../set_reminder/{{client.id}}" title="Установить напоминалку">&#8986;</a> 
+                            <a href="../client/{{client.id}}" title="{{client.description}}" target="_blank">{{client.fio}}</a> <a href="../set_reminder/{{client.id}}" title="Set reminder">&#8986;</a> 
                             {% ifnotequal client.category.name 'Звонки' %}
-                                <a href="../move_to_call/{{client.id}}" title="Переместить в звонки">&#9742;</a>
+                                <a href="../move_to_call/{{client.id}}" title="Move to call">&#9742;</a>
                             {% endifnotequal %}
                             </li>
                         {% endfor %}
@@ -118,5 +103,5 @@
             </td>
         </tr>
     </table>
-    <a href="../all_clients/">Просмотреть всех клиентов и поиск(архив)</a>
+    <a href="../all_clients/">All clients, client search & archive</a>
 {% endblock %}

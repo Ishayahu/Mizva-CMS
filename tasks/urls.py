@@ -21,7 +21,9 @@ urlpatterns = patterns('',
     url(r'^new_client/$', todoes.views.new_client),
     url(r'^edit/(\d+)/$', todoes.views.edit_client),
     # изменение языка интерфейса
-    url(r'^language/([^/]+)/$', todoes.views.change_language),
+    url(r'^language/([^/]+)/([^/]+)$', todoes.views.change_language),
+    # url(r'^language/([^/]+)/$', todoes.views.change_language_root),
+    
     # клиент и заказы
     url(r'^client/(\d+)/$', todoes.views.client),
     url(r'^client_claims/(\d+)/$', todoes.views.client_claims),
@@ -29,6 +31,15 @@ urlpatterns = patterns('',
     url(r'^edit_claim/(\d+)/$', todoes.views.edit_claim),
     url(r'^debt/(\d+)/(\d+)/$', todoes.views.debt),
     url(r'^delete_claim/(\d+)/$', todoes.views.delete_claim),
+    
+    url(r'^image_delete/(\d+)/$', todoes.views.image_delete),
+    
+    url(r'^api/delete/([^/]+)/(\d+)/$', todoes.views.delete_asset),
+    url(r'^api/edit/([^/]+)/(\d+)/$', todoes.views.edit_asset),
+    url(r'^api/asset/save_edited/(\d+)/$', todoes.views.save_edited_asset),
+    
+    
+    url(r'^new_worker/$', todoes.views.new_worker),
 
     # установка напоминалки повторяющейся задачи
     # удаление повторяющейся задачи

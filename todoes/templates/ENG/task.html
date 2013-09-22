@@ -50,8 +50,8 @@
       </script>
 {% endblock %}
 {% block content %}
-    <p class="leftstr"><a href="/">To main page</a></p>
-    <p class="rightstr">Hello, {{ fio.fio }}!</p>
+    {# <p class="leftstr"><a href="/">To main page</a></p> #}
+    {# <p class="rightstr">Hello, {{ fio.fio }}!</p> #}
     {% if my_error %}
         {% for error in my_error %}
             <h2>{{error}}</h2><br />
@@ -81,6 +81,9 @@
                 <tr><td>Entering date</td><td>{{task.entering_date}}</td></tr>
                 <tr><td>Remembering date</td><td>{{task.when_to_reminder}}</td></tr>
             </table>
+            {% for file in files %}
+                <img src="{{file.file.url}}" /><a href="/image_delete/{{file.id}}">X</a>
+            {% endfor %}
                 <p><a href="/edit/{{task.id}}">Edit description of a client</a></p>
                 <p><a href="/client_claims/{{task.id}}">History of claims</a></p>
 

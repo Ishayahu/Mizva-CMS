@@ -1,0 +1,25 @@
+{# 'models':asset_type_models,'statuses':statuses,'garantys':garantys,'places':places,'asset_id':id,'item':a #}
+
+    <td>
+        {% csrf_token %}
+        {{item.name}}№ {{item.id}}
+        <input type='hidden' name='asset_type' value="{{item.item_type}}" />
+        {# <input type='hidden' name='item_id' value="{{item.id}}" /> #}
+    </td>
+    <td>
+        <input type="text" name="description_{{item.id}}" value="{{item.description}}">
+    </td>
+    <td>
+        <select name="worker_{{item.id}}">
+            {% for worker in workers %}
+                <option value="{{worker.id}}">{{worker.fio}}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <input type="number" class="notcheck" name="payment_{{item.id}}" value="{{item.price}}">
+    </td>
+    <td>
+        <input type="button" value="Save" onClick="send('/api/asset/save_edited/{{item.id}}/','asset_edition_form','{{item.tr_name}}','message');" />
+        {# <input type="submit" value='save' /> #}
+    </td>

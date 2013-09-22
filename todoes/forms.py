@@ -29,17 +29,8 @@ inp_f=( '%d-%m-%Y %H:%M:%S',     # '2006-10-25 14:30:59'
 class NewClientForm(forms.Form):
     fio = forms.CharField(max_length=140, label='ФИО клиента')
     description = forms.CharField(widget=forms.Textarea, label='Описание')
-    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
-    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
-    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
-    #entering_date = forms.DateTimeField(label='Дата внесения',input_formats=inp_f)
-    #exiting_date = forms.DateTimeField(label='Дата выхода из системы',input_formats=inp_f)
     mail = forms.EmailField(label = 'Мыло',required=False)
-    tel = forms.CharField(label='Телефон', max_length=10, min_length=10,required=False)
-    #number = forms.IntegerField(label='Количество заказанных мезузот',required=False)
-    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-    #payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-    #get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
+    tel = forms.CharField(label='Телефон', min_length=10,required=False)
     dr = forms.DateTimeField(label='День рождения',input_formats=inp_f,required=False)
     spouse_fio = forms.CharField(max_length=140, label='ФИО супруга(и)',required=False)
     spouse_tel = forms.CharField(label='Телефон супруга(и)', max_length=10, min_length=10,required=False)
@@ -47,52 +38,53 @@ class NewClientForm(forms.Form):
     spouse_dr = forms.DateTimeField(label='День рождения супруга(и)',input_formats=inp_f,required=False)
     home_tel = forms.CharField(label='Домашний телефон', max_length=10, min_length=10,required=False)
     address = forms.CharField(widget=forms.Textarea, label='Адресс',required=False)
+    file  = forms.FileField(label="Прикрепить аватар", required=False)
+    def clean_tel(self):
+        data = self.cleaned_data
+        raw_tel =data['tel']
+        tel = ''
+        if raw_tel[:2]=="+7":
+            tel = raw_tel[2:]
+        if raw_tel[:2]=="7":
+            tel = raw_tel[1:]
+        tel = tel.replace(" ","")
+        if len(tel)>10:
+            raise forms.ValidationError('Номер телефона слишком длинный') 
+        return tel
 class EditClientForm(forms.Form):
     fio = forms.CharField(max_length=140, label='ФИО клиента')
     description = forms.CharField(widget=forms.Textarea, label='Описание')
-    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
-    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
-    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
     entering_date = forms.DateTimeField(label='Дата внесения',input_formats=inp_f)
     exiting_date = forms.DateTimeField(label='Дата выхода из системы',input_formats=inp_f,required=False)
     mail = forms.EmailField(label = 'Мыло',required=False)
-    tel = forms.CharField(label='Телефон', max_length=10, min_length=10,required=False)
+    tel = forms.CharField(label='Телефон', min_length=10,required=False)
     dr = forms.DateTimeField(label='День рождения',input_formats=inp_f,required=False)
     spouse_fio = forms.CharField(max_length=140, label='ФИО супруга(и)',required=False)
     spouse_tel = forms.CharField(label='Телефон супруга(и)', max_length=10, min_length=10,required=False)
     spouse_mail = forms.EmailField(label = 'Мыло супруга(и)',required=False)
     spouse_dr = forms.DateTimeField(label='День рождения супруга(и)',input_formats=inp_f,required=False)
     home_tel = forms.CharField(label='Домашний телефон', max_length=10, min_length=10,required=False)
-    address = forms.CharField(widget=forms.Textarea, label='Адресс',required=False)
-    #class NewClaimForm(forms.Form):
-#    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    number = forms.IntegerField(label='Количество заказанных мезузот')
-#    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-#    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
-#class EditClaimForm(forms.Form):
-#    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    number = forms.IntegerField(label='Количество заказанных мезузот')
-#    date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    date_of_installation = forms.DateTimeField(label='Дата установки мезузы',input_formats=inp_f,required=False)
-#    seller = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Продавец')
-#    worker = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Установщик',required=False)
-#    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-#    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
-#    date_of_payment = forms.DateTimeField(label='Дата последнего внесения денег',input_formats=inp_f)
- 
+    address = forms.CharField(widget=forms.Textarea, label='Адрес',required=False)
+    file  = forms.FileField(label="Прикрепить аватар", required=False)
+    def clean_tel(self):
+        data = self.cleaned_data
+        raw_tel =data['tel']
+        tel = ''
+        if raw_tel[:2]=="+7":
+            tel = raw_tel[2:]
+        if raw_tel[:2]=="7":
+            tel = raw_tel[1:]
+        tel = tel.replace(" ","")
+        if len(tel)>10:
+            raise forms.ValidationError('Номер телефона слишком длинный') 
+        return tel
 class ClientSearchForm(forms.Form):
     name = forms.CharField(max_length=140, label='Строка для поиска')
 class NoteToClientAddForm(forms.Form):
-    #def __init__(self, *args, **kwargs):
-    #    self.defaults = kwargs.pop('defaults','')
-    #    self.exclude = kwargs.pop('exclude','')
-    #    super(NoteToTicketAddForm, self).__init__(*args, **kwargs)
-    #    self.fields['workers'].queryset = Person.objects.exclude(fio__in = [person.fio for person in self.exclude ])
-    #    self.fields['workers'].initial = Person.objects.filter(fio__in = self.defaults)
-
     note = forms.CharField(widget=forms.Textarea, label='Комментарий',required=False )
-    #workers = forms.ModelMultipleChoiceField(queryset  = Person.objects.all(), label='Кого ещё уведомить о комментарии?',required=False,)
 class UserCreationFormMY(UserCreationForm):
+    error_css_class = 'user_creation_error'
+    required_css_class = 'new_worker_tr'
     fio = forms.CharField(label='ФИО')
     mail = forms.EmailField(label = 'Мыло')
     tel = forms.CharField(label='Телефон', max_length=10, min_length=10)
@@ -102,17 +94,8 @@ class UserCreationFormMY(UserCreationForm):
 class NewClientForm_ENG(forms.Form):
     fio = forms.CharField(max_length=140, label='Name of client')
     description = forms.CharField(widget=forms.Textarea, label='Description')
-    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
-    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
-    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
-    #entering_date = forms.DateTimeField(label='Дата внесения',input_formats=inp_f)
-    #exiting_date = forms.DateTimeField(label='Дата выхода из системы',input_formats=inp_f)
     mail = forms.EmailField(label = 'E-mail',required=False)
     tel = forms.CharField(label='Phone', max_length=10, min_length=10,required=False)
-    #number = forms.IntegerField(label='Количество заказанных мезузот',required=False)
-    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-    #payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-    #get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
     dr = forms.DateTimeField(label='Birthday',input_formats=inp_f,required=False)
     spouse_fio = forms.CharField(max_length=140, label='Spouse`s name',required=False)
     spouse_tel = forms.CharField(label='Spouse`s phone', max_length=10, min_length=10,required=False)
@@ -120,12 +103,22 @@ class NewClientForm_ENG(forms.Form):
     spouse_dr = forms.DateTimeField(label='Spouse`s Birthday',input_formats=inp_f,required=False)
     home_tel = forms.CharField(label='Home phone number', max_length=10, min_length=10,required=False)
     address = forms.CharField(widget=forms.Textarea, label='Address',required=False)    
+    file  = forms.FileField(label="Add avatar", required=False)
+    def clean_tel(self):
+        data = self.cleaned_data
+        raw_tel =data['tel']
+        tel = ''
+        if raw_tel[:2]=="+7":
+            tel = raw_tel[2:]
+        if raw_tel[:2]=="7":
+            tel = raw_tel[1:]
+        tel = tel.replace(" ","")
+        if len(tel)>10:
+            raise forms.ValidationError('Telephone number is too long') 
+        return tel
 class EditClientForm_ENG(forms.Form):
     fio = forms.CharField(max_length=140, label='Name of client')
     description = forms.CharField(widget=forms.Textarea, label='Description')
-    #manager = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Менеджер')
-    #priority = forms.ChoiceField(widget=forms.RadioSelect,choices = PRIORITY_CHOICES, label='Приоритет')
-    #category = forms.ModelChoiceField(queryset  = Categories.objects.all(), label='Категория')
     entering_date = forms.DateTimeField(label='Entering date',input_formats=inp_f)
     exiting_date = forms.DateTimeField(label='Exititng date',input_formats=inp_f,required=False)
     mail = forms.EmailField(label = 'E-mail',required=False)
@@ -137,34 +130,23 @@ class EditClientForm_ENG(forms.Form):
     spouse_dr = forms.DateTimeField(label='Spouse`s Birthday',input_formats=inp_f,required=False)
     home_tel = forms.CharField(label='Home phone number', max_length=10, min_length=10,required=False)
     address = forms.CharField(widget=forms.Textarea, label='Address',required=False) 
-#class NewClaimForm(forms.Form):
-#    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    number = forms.IntegerField(label='Количество заказанных мезузот')
-#    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-#    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
-#class EditClaimForm(forms.Form):
-#    #date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    number = forms.IntegerField(label='Количество заказанных мезузот')
-#    date_of_claim = forms.DateTimeField(label='Дата создания заявки',input_formats=inp_f)
-#    date_of_installation = forms.DateTimeField(label='Дата установки мезузы',input_formats=inp_f,required=False)
-#    seller = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Продавец')
-#    worker = forms.ModelChoiceField(queryset  = Person.objects.all(), label='Установщик',required=False)
-#    payment = forms.DecimalField(decimal_places=2, max_digits=8,label='Итоговая стоимость',required=False)
-#    get_cash = forms.DecimalField(decimal_places=2, max_digits=8,label='Внесено денег',required=False)
-#    date_of_payment = forms.DateTimeField(label='Дата последнего внесения денег',input_formats=inp_f)
- 
+    file  = forms.FileField(label="Add avatar", required=False)
+    def clean_tel(self):
+        data = self.cleaned_data
+        raw_tel =data['tel']
+        tel = ''
+        if raw_tel[:2]=="+7":
+            tel = raw_tel[2:]
+        if raw_tel[:2]=="7":
+            tel = raw_tel[1:]
+        tel = tel.replace(" ","")
+        if len(tel)>10:
+            raise forms.ValidationError('Telephone number is too long') 
+        return tel
 class ClientSearchForm_ENG(forms.Form):
     name = forms.CharField(max_length=140, label='String to search')
 class NoteToClientAddForm_ENG(forms.Form):
-    #def __init__(self, *args, **kwargs):
-    #    self.defaults = kwargs.pop('defaults','')
-    #    self.exclude = kwargs.pop('exclude','')
-    #    super(NoteToTicketAddForm, self).__init__(*args, **kwargs)
-    #    self.fields['workers'].queryset = Person.objects.exclude(fio__in = [person.fio for person in self.exclude ])
-    #    self.fields['workers'].initial = Person.objects.filter(fio__in = self.defaults)
-
     note = forms.CharField(widget=forms.Textarea, label='Note',required=False )
-    #workers = forms.ModelMultipleChoiceField(queryset  = Person.objects.all(), label='Кого ещё уведомить о комментарии?',required=False,)
 class UserCreationFormMY_ENG(UserCreationForm):
     fio = forms.CharField(label='Name')
     mail = forms.EmailField(label = 'E-mail')

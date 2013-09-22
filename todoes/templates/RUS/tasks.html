@@ -3,20 +3,6 @@
     Мицва CMS. Главная страница
 {% endblock %}
 {% block style %}
-    <style>
-       .leftstr, .rightstr {
-        float: left; /* Обтекание справа */ 
-        width: 50%; /* Ширина текстового блока */ 
-       }
-       .rightstr {
-        text-align: right; /* Выравнивание по правому краю */ 
-       }
-        .center {
-        text-align: center; 
-        width: 100%; /* Ширина текстового блока */ 
-      }
-
-    </style>
     <meta http-equiv="refresh" content="60">
     {# горячие клавиши #}
     <script>
@@ -36,9 +22,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class ="leftstr"><p>Привет, {{ worker.fio }}</p></div>
-    <div class ="rightstr"><p><a href="/language/ru">ru</a>|<a href="/language/eng">eng</a></p>
-    <p><a target="_new" href="/media/versions.html">v0.0.2</a></p></div>
+
     {% if admin %}
     {% endif %}
     <br />
@@ -50,73 +34,74 @@
             <h2>{{error}}</h2><br />
         {% endfor %}
     {% endif %}
-     <p align="center"><a href="/new_client/">Добавить клиента</a></p>
-    <table>
-        <tr>
-            <th>Активные клиенты</th>
-            <th></th>
-        </tr>
-        <tr>
-            <td>
-                {% if clients_to_show %}
-                    <ol>
-                        {% for client in clients_to_show %}
-                            {% ifequal client.priority 1 %}
-                                <li class="first_prior">&#11014;
-                            {% endifequal %}                            
-                            {% ifequal client.priority 2 %}
-                                <li class="second_prior">&#8657;
-                            {% endifequal %}                            
-                            {% ifequal client.priority 3 %}
-                                <li class="third_prior">
-                            {% endifequal %}                            
-                            {% ifequal client.priority 4 %}
-                                <li class="fourth_prior">&#8659;
-                            {% endifequal %}                            
-                            {% ifequal client.priority 5 %}
-                                <li class="fifth_prior">&#11015;
-                            {% endifequal %}
-                            {% ifequal client.category.name 'Звонки' %}
-                                &#9743;
-                            {% endifequal %}                            
-                            <a href="../client/{{client.id}}" title="{{client.description}}" target="_blank">{{client.fio}}</a> <a href="../set_reminder/{{client.id}}" title="Установить напоминалку">&#8986;</a> 
-                            {% ifnotequal client.category.name 'Звонки' %}
-                                <a href="../move_to_call/{{client.id}}" title="Переместить в звонки">&#9742;</a>
-                            {% endifnotequal %}
-                            </li>
-                        {% endfor %}
-                    </ol>
-                {% endif %}
-            </td>
-            <td>
-               
-            </td>
-        </tr>
-    </table>
-    <table>
-        <tr>
-            <td>
-                {% if clients_to_confirm %}
-                    <h4>Заявки на подтверждение</h4>
-                    <form action='' method='post'>
-                        {% csrf_token %}
-                        <ol>
-                            {% for client in clients_to_confirm %}
-                                <li>
-                                    <input type='checkbox' value='{{client.id}}' name='client_to_confirm_id' />
-                                    <a href="../confirm/{{client.id}}" title="{{client.description}}" target="_blank">{{client.fio}}</a>
-                                    <a href="../unclose/{{client.id}}" title="Отменить закрытие задачи" onclick="if (confirm('Уверены?')) {return true} else {return false};"> &#10008;</a>
-                                    <a href="../client/{{client.id}}" title="Просмотреть описание задачи задачи"> &#9776;</a>
-                                </li>
-                            {% endfor %}
-                        </ol>
-                        <input type='submit' value='Подтвердить несколько задач' name='submit_many' onclick="if (confirm('Уверены?')) {return true} else {return false};"/>
-                    </form>
-                {% endif %}
-            </td>
-            <td  width="70%">
-            </td>
-        </tr>
-    </table>
-    <a href="../all_clients/">Просмотреть всех клиентов и поиск(архив)</a>
+    <div class="button add_client">
+		<a href="/new_client/">Добавить клиента</a>
+	</div>
+	<div class="button add_manager">
+     <a href="/accounts/register/">Добавить продавца/менеджера</a>
+	</div>
+	<div class="hr1">
+		<hr />
+	</div>
+	<div class="clients">
+		<div class="clients_title">
+			Активные клиенты
+		</div>
+		<table>
+			<tr>
+				<th>ID</th>
+				<th>ФИО</th>
+			</tr>
+			<tr>
+				<td colspan=2>
+					<div class="table_header_separator"><hr /></div>
+				</td>
+			</tr>
+			{% if clients_to_show %}
+				{% for client in clients_to_show %}
+					<tr>
+						<td>
+							{{client.id}}
+						</td>
+						<td>
+							{% ifequal client.priority 1 %}
+								<li class="first_prior">&#11014;
+							{% endifequal %}                            
+							{% ifequal client.priority 2 %}
+								<li class="second_prior">&#8657;
+							{% endifequal %}                            
+							{% ifequal client.priority 3 %}
+								<li class="third_prior">
+							{% endifequal %}                            
+							{% ifequal client.priority 4 %}
+								<li class="fourth_prior">&#8659;
+							{% endifequal %}                            
+							{% ifequal client.priority 5 %}
+								<li class="fifth_prior">&#11015;
+							{% endifequal %}
+							{% ifequal client.category.name 'Звонки' %}
+								&#9743;
+							{% endifequal %}                            
+							<a href="../client/{{client.id}}" title="{{client.description}}" target="_blank">{{client.fio}}</a> 
+							{% comment %}
+								<a href="../set_reminder/{{client.id}}" title="Установить напоминалку">&#8986;</a> 
+								{% ifnotequal client.category.name 'Звонки' %}
+									<a href="../move_to_call/{{client.id}}" title="Переместить в звонки">&#9742;</a>
+								{% endifnotequal %}
+							{% endcomment %}
+						</td>
+					</tr>
+					<tr>
+						<td colspan=2>
+							<div class="table_separator"><hr /></div>
+						</td>
+					</tr>
+				{% endfor %}
+			{% endif %}
+		</table>
+		<div class="footer_links">
+			<a href="../all_clients/">Просмотреть всех клиентов и поиск(архив)</a>
+		</div>
+	</div>
+
 {% endblock %}

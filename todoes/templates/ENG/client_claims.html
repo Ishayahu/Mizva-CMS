@@ -1,6 +1,6 @@
 {% extends "ENG/base.html" %}
 {% block title %}
-    Claim history: {{task.fio}}
+    Claim history for {{task.fio}}
 {% endblock %}
 {% block style %}
     <style>
@@ -18,6 +18,14 @@
     </style>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
     <script>
+        function new_worker() {
+            $("#new_worker").show()
+            $("#new_worker").load("/new_worker/", function (result) {
+                //$("#new_worker").hide();
+                //location.reload();
+                                                    }
+            )
+        }
         var m=1
         var t=1
         function new_claim() {
@@ -30,7 +38,7 @@
             claim_content= $("#claim_content")
             //var html = claim_content.html();
             var html=''
-            html+='<div id="mezuza_'+m+'">Mezuzah №'+m+': <label>Description/Place<input type="text" name="mezuza_desc_'+m+'"></label>\n';
+            html+='<div id="mezuza_'+m+'">Mezuza №'+m+': <label>Description/Place<input type="text" name="mezuza_desc_'+m+'"></label>\n';
             html+='<label>Worker<select name="mezuza_worker_'+m+'">';
             {% for worker in workers %}
                 html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
@@ -47,7 +55,7 @@
             claim_content= $("#claim_content")
             var html=''
             //var html = claim_content.html();
-            html+='<div id="tfilin_'+m+'">Tefillin №'+t+': <label>Description/Place<input type="text" name="tfilin_desc_'+t+'"></label>\n';
+            html+='<div id="tfilin_'+m+'">Tfillin №'+t+': <label>Description/Place<input type="text" name="tfilin_desc_'+t+'"></label>\n';
             html+='<label>Worker<select name="tfilin_worker_'+t+'">';
             {% for worker in workers %}
                 html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
@@ -65,11 +73,11 @@
             var html=''
             //var html = claim_content.html();
             {% for item in mezuzas %}
-                 html+='<label>Mezuzah {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}"></label>\n';
+                 html+='<label>Mezuza {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}"></label>\n';
                  html+='<label>Price<input type="number" class="check" id="mezuza_{{item.id}}_payment"></label>\n<br />';
             {% endfor %}
             {% for item in tfilins %}
-                 html+='<label>Tefillin {{item.description}}: <input type="checkbox" name="tfilin_{{item.id}}"></label>\n';
+                 html+='<label>Tfillin {{item.description}}: <input type="checkbox" name="tfilin_{{item.id}}"></label>\n';
                  html+='<label>Price<input type="number" class="check" id="tfilin_{{item.id}}_payment"></label>\n<br />';            
             {% endfor %}
             html+='<label>Worker<select name="bdikot_worker">';
@@ -132,18 +140,41 @@
                 $("#bdikot_text").val(b_txt)
             });
         });
-        
+    function send(url,form_id,result_div) {
+        // Отсылаем паметры
+        $.ajax({
+                type: "POST",
+                url:  url,
+                data: $("#"+form_id).serialize(),
+                // Выводим то что вернул PHP
+                success: function(html)
+                {
+                        $("#"+result_div).empty();
+                        $("#"+result_div).append(html);
+                        // скрываем форму поставщика, открываем заказа и т.п.
+                        $("#new_worker").empty()
+                        $("#new_worker").hide()
+                },
+                error: function()
+                {
+                    $("#"+result_div).empty();
+                    $("#"+result_div).append("Error!");
+                }
+        });     
+            }
     </script>
 {% endblock %}
 {% block content %}
-    <p class="leftstr"><a href="/">To main page</a></p>
-    <p class="rightstr">Hello, {{ fio.fio }}!</p>
- 
+
+    <div id="message"></div>
     <input type="button" title='Add new claim' onclick='new_claim()' value="New claim" />
+    <input type="button" title='Add new worker' onclick='new_worker()' value="New worker" />
+    
+    <div id="new_worker" style="display: none;"></div>
     <div id="new_claim" style="display: none;">
         <div class='error'></div>
-        <input type="button" title='Add mezuzah' onclick='new_mezuza()' value="+Mezuzah" />
-        <input type="button" title='Add tefillin' onclick='new_tfilin()' value="+Tefillin" />
+        <input type="button" title='Add mezuza' onclick='new_mezuza()' value="+Mezuza" />
+        <input type="button" title='Add tfillin' onclick='new_tfilin()' value="+Tfilin" />
         {% if can_bdika %}
             <input type="button" title='Add bdikot' onclick='bdikot()' value="+Bdikot" />
         {% endif %}
@@ -155,7 +186,7 @@
             <input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
             <input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
             <input type="hidden" id="bdikot_text" name="bdikot_text" value="0" />
-            <label>Paid money<input type="number" name="get_cash" value=0></label><br />
+            <label>Already paid<input type="number" name="get_cash" value=0></label><br />
             <label>Discount<input type="number" name="discount" value=0></label>
             <input type="submit" value="Done" name="done" />
         </form>
@@ -163,7 +194,7 @@
     <br />
     <table border=1>
         <tr>
-            <th>Date of claim</th>
+            <th>Claim date</th>
             <th>Description</th>
             <th>Cost</th>
             <th>Paid</th>
@@ -176,11 +207,11 @@
                 <td>{{claim.payment}} руб.</td>
                 <td>{{claim.get_cash}} руб.</td>
                 <td>
-                    <a href="/print/claim/{{claim.id}}" target="_blank" title="Print check">&#12212;</a>
-                    {# <a href="/edit_claim/{{claim.id}}" title="Edit">&#9998;</a> #}
+                    <a href="/print/claim/{{claim.id}}" target="_blank" title="Print cheque">&#12212;</a>
+                    <a href="/edit_claim/{{claim.id}}" title="Edit">&#9998;</a>
                     {# <a href="/debt/{{claim.id}}" title='Оплата долга' onclick='if (a = prompt("Введите сумму доплаты","{{claim.rest_cash}}")) {window.location.replace("/debt/4/"+a)} else {return false}'>$</a> #}
-                    <input type="button" title='Repayment of a debt' onclick='if (a = prompt("Enter the amount of additional payments","{{claim.rest_cash}}")) {window.location.replace("/debt/{{claim.id}}/"+a)} else {return false}' value="$" />
-                    <a href="/delete_claim/{{claim.id}}" title='Delete claim' onclick="if (confirm('Уверены?')) {return true} else {return false};">X</a>
+                    <input type="button" title='Debt' onclick='if (a = prompt("Enter debt value","{{claim.rest_cash}}")) {window.location.replace("/debt/{{claim.id}}/"+a)} else {return false}' value="$" />
+                    <a href="/delete_claim/{{claim.id}}" title='Delete claim' onclick="if (confirm('Are you shure?')) {return true} else {return false};">X</a>
                 </td>
             </tr>
          {% endfor %}

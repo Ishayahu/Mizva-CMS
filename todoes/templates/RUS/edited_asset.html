@@ -1,0 +1,11 @@
+<td>{{item.name}} №{{item.id}}</td>
+<td>{{item.description}}</td>
+<td>{{item.worker.fio}}</td>
+<td>{{item.price}}</td>
+<td>
+	<a onclick="edit_item('{{item.item_type}}',{{item.id}},'#{{item.item_type}}_{{item.id}}')" title="Редактировать"><img src="/media/icons/order_history_edit.jpg" /></a>
+	<a title='Удалить счёт' onclick="div_remove('{{item.item_type}}',{{item.id}},'#{{item.item_type}}_{{item.id}}')"><img src="/media/icons/client_photo_delete.jpg" /></a>
+	{% comment %}
+		<input type="button" onclick="div_remove('{{item.item_type}}',{{item.id}},'#{{item.item_type}}_{{item.id}}')" value="x"><input type="button" onclick="edit_item('{{item.item_type}}',{{item.id}},'#{{item.item_type}}_{{item.id}}')" value="&#9998;">
+	{% endcomment %}
+</td>

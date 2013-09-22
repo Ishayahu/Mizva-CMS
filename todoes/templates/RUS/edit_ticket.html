@@ -1,0 +1,37 @@
+{% extends "RUS/base_css2.html" %}
+{% block title %}
+    Новый клиент
+{% endblock %}
+{% block style %}
+    <script>
+    </script>
+    <style>
+    </style>
+{% endblock %}
+{% block content %}
+    {% if form.errors %}
+    {#    {{form.errors}} #}
+    {% endif %}
+	<div style="height:30px">
+	</div>
+    <form action="" method="post"  enctype="multipart/form-data">
+        {% csrf_token %}
+            {# {{ form.as_p }} #}
+		<table class="table_edit">
+			{% for field in form %}
+				<tr>
+					<td class=filedLabel>
+						{{ field.label  }}
+					</td>
+					<td class=fieldField>
+						{{ field.errors }}
+						{{ field }}
+					</td>
+				</tr>
+			{% endfor %}
+		</table>
+		<div style="height:20px">
+		</div>
+		<input class="button submit_edit_client" type="submit" />
+    </form>
+{% endblock %}

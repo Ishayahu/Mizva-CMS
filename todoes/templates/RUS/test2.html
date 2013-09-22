@@ -1,0 +1,81 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 5//EN>
+<html lang="ru">
+<head>
+    <title>
+    Ишаяу Ластов
+</title>
+    
+  <script>
+	var was_selected = []
+	var notice = true
+	function del_selection(){ 
+		var worker_select = document.getElementById("id_workers");
+		if (window.notice) {
+			// если снимаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(option.selected) {
+					window.was_selected[i] = true
+				} else {
+					window.was_selected[i] = false
+				}
+			}
+			worker_select.selectedIndex=-1;
+		} else {
+			// если восстанавливаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(window.was_selected[i]) {
+					option.selected = true
+				}
+			}
+		}
+		window.notice = ! window.notice
+	}
+	function answer_to_note(div_id,note_id){
+		document.getElementById(div_id).outerHTML = "<form action='' method='post'><input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' /><textarea id='id_note' rows='10' cols='40' name='answer'></textarea><input type='hidden' name='to_note' value='"+note_id+"' /><input type='submit' value='Ответить на комментарий' name='answer_to_comment' /></form>";
+	}
+
+  </script>
+
+    <style>
+       .leftstr, .rightstr {
+        float: left; /* Обтекание справа */ 
+        width: 50%; /* Ширина текстового блока */ 
+       }
+       .rightstr {
+        text-align: right; /* Выравнивание по правому краю */ 
+       }
+        .center {
+        text-align: center; 
+        width: 100%; /* Ширина текстового блока */ 
+      }
+	.author2{
+	color:grey;
+	font-size: 14px;
+    /*float:left;*/
+}
+    </style>
+    <link rel="stylesheet" type="text/css" href="http://mezuzah.ru/media/css/main.css" /> 
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+</head>
+<body>
+
+										
+											
+                                                <input type="submit" value=" " title="Редактировать комментарий" name="edit_comment" class="edit_comment"/>
+												<input type="submit" value=" " title="Удалить комментарий" name="del_comment" class="delete_comment"/>
+													<input type="button" class="button_as_link" value="Ответить" onclick="answer_to_note('answer_to_note_5',5)"/>
+											
+										
+										
+										
+											<span class="author2">13 сентября 2013 г. 11:07:05
+												
+													Ishayahu Test<span>
+												
+											
+
+</body>
+</html>

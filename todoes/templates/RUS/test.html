@@ -1,0 +1,362 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 5//EN>
+<html lang="ru">
+<head>
+    <title>
+    Ишаяу Ластов
+</title>
+    
+  <script>
+	var was_selected = []
+	var notice = true
+	function del_selection(){ 
+		var worker_select = document.getElementById("id_workers");
+		if (window.notice) {
+			// если снимаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(option.selected) {
+					window.was_selected[i] = true
+				} else {
+					window.was_selected[i] = false
+				}
+			}
+			worker_select.selectedIndex=-1;
+		} else {
+			// если восстанавливаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(window.was_selected[i]) {
+					option.selected = true
+				}
+			}
+		}
+		window.notice = ! window.notice
+	}
+	function answer_to_note(div_id,note_id){
+		document.getElementById(div_id).outerHTML = "<form action='' method='post'><input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' /><textarea id='id_note' rows='10' cols='40' name='answer'></textarea><input type='hidden' name='to_note' value='"+note_id+"' /><input type='submit' value='Ответить на комментарий' name='answer_to_comment' /></form>";
+	}
+
+  </script>
+
+    <style>
+       .leftstr, .rightstr {
+        float: left; /* Обтекание справа */ 
+        width: 50%; /* Ширина текстового блока */ 
+       }
+       .rightstr {
+        text-align: right; /* Выравнивание по правому краю */ 
+       }
+        .center {
+        text-align: center; 
+        width: 100%; /* Ширина текстового блока */ 
+      }
+
+    </style>
+    <link rel="stylesheet" type="text/css" href="http://mezuzah.ru/media/css/main.css" /> 
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="main">
+        <div class="header_big">
+			<div class="hello">
+				Привет, Ishayahu Test
+			</div>
+			<div class="to_main">
+				
+					<a href="/">На главную</a>
+				
+			</div>
+			<div class="logout">
+				<a href="/accounts/logout/">Выйти</a>
+			</div>
+			<div class="language">
+				<a href="/language/ru/+client+3+">ru</a> | <a href="/language/eng/+client+3+">eng</a>
+			</div>
+			<div class="">
+			
+			</div>
+			<div class="version">
+				<a target="_new" href="http://mezuzah.ru/media/versions.html">v0.0.2a</a>
+			</div>
+        </div>
+		<div class="separator">
+		</div>
+        
+	<div class="header_title_left">
+		Клиент
+	</div>
+	<div class="header_title_right">
+		Комментарии
+	</div>
+
+    
+
+    
+	
+	
+	<div class="avatars">
+		<table width="100px">
+			
+				<tr>
+					<td>
+						<a href="http://mezuzah.ru/media/task_files/avatar96x96.jpg"><img src="http://mezuzah.ru/media/task_files/avatar96x96.jpg" height="100px" width="100px"/></a>
+						<br />
+						<a href="/image_delete/3"><img src="http://mezuzah.ru/media/icons/client_photo_delete.jpg" /></a>
+					</td>
+				</tr>
+			
+				<tr>
+					<td>
+						<a href="http://mezuzah.ru/media/task_files/MM1.jpg"><img src="http://mezuzah.ru/media/task_files/MM1.jpg" height="100px" width="100px"/></a>
+						<br />
+						<a href="/image_delete/4"><img src="http://mezuzah.ru/media/icons/client_photo_delete.jpg" /></a>
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+	<div class="client_info">
+		<table border=1>
+			<tr>
+				<th>
+					Ишаяу Ластов
+				</th>
+			</tr>
+			<tr>
+				<td>
+					<b>Телефон:</b>
+					<br />
+					
+						Не указан
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Почта:</b>
+					<br />
+					
+						Не указана
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Исполнитель:</b>
+					<br />
+					
+						Не указан
+					
+				</td>
+			</tr>
+			<tr>
+			
+			<tr>
+				<td>
+					<b>Возраст</b>: 					
+					
+						Не указан
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Информация о супруге:</b>
+					<br />
+					
+						Не указана
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Адрес:</b>
+					<br />
+					
+						Не указан
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Домашний телефон:</b>
+					<br />
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Дата добавления:</b>
+					<br />
+					8 июля 2013 г. 17:04:10
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Дата напоминания:</b>
+					<br />
+					11 сентября 2011 г. 18:01:24
+				</td>
+			</tr>
+		</table>
+			<p><a href="/edit/3">Редактировать описание клиента</a></p>
+			<p><a href="/client_claims/3">История заказов</a></p>
+
+			<p><form action="/delete/3/" method="post"><input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' /><input type="submit" value="Удалить клиента" name="del_client" onclick="if (confirm('Уверены?')) {return true} else {return false};"/></form></p>
+
+	</div>
+	<div class="client_description">
+		<b>Описание пользователя:</b>
+		<br />
+		Inline literals may contain any characters except two adjacent backquotes in an end-string context (according to the recognition rules above). No markup interpretation (including backslash-escape interpretation) is done within inline literals.<br /><br />Line breaks are not preserved in inline literals. Although a reStructuredText parser will preserve runs of spaces in its output, the final representation of the processed document is dependent on the output formatter, thus the preservation of whitespace cannot be guaranteed. If the preservation of line breaks and/or other whitespace is important, literal blocks should be used.	
+	</div>
+		
+	<div class="comments">	
+				
+				
+				<table border=1>
+					
+						<tr>
+							<form action="" method="post">
+								<input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' />
+								<td style="padding: 0px 0px 0px 0%;"> 
+									
+									
+										Line breaks are not preserved in inline literals. Although a reStructuredText parser will preserve runs of spaces in its output, the final representation of the processed document is dependent on the output formatter, thus the preservation of whitespace cannot be guaranteed. If the preservation of line breaks and/or other whitespace is important, literal blocks should be used.<br />
+									
+									
+									
+									
+									<br />
+									<div class="comment_buttons" id="answer_to_note_6">
+										
+										
+											
+											
+												<input type="hidden" name="num" value="6" />
+                                                <input type="submit" value=" " title="Редактировать комментарий" name="edit_comment" class="edit_comment"/>
+												<input type="submit" value=" " title="Удалить комментарий" name="del_comment" class="delete_comment"/>
+												<div class="button_as_link">
+													<input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_6',6)"/>
+												</div>
+											
+										
+										
+										
+											<span class="author">
+												13 сентября 2013 г. 11:07:09
+												
+													Ishayahu Test
+												
+											</span>
+									</div>
+								</td>
+							</form>
+						</tr>
+					
+						<tr>
+							<form action="" method="post">
+								<input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' />
+								<td style="padding: 0px 0px 0px 4%;"> 
+									
+									
+										Line breaks are not preserved in inline literals. Although a reStructuredText parser will preserve runs of spaces in its output, the final representation of the processed document is dependent on the output formatter, thus the preservation of whitespace cannot be guaranteed. If the preservation of line breaks and/or other whitespace is important, literal blocks should be used.<br />
+									
+									
+									
+									
+									<br />
+									<div class="comment_buttons" id="answer_to_note_7">
+										
+										
+											
+											
+												<input type="hidden" name="num" value="7" />
+                                                <input type="submit" value=" " title="Редактировать комментарий" name="edit_comment" class="edit_comment"/>
+												<input type="submit" value=" " title="Удалить комментарий" name="del_comment" class="delete_comment"/>
+												<div class="button_as_link">
+													<input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_7',7)"/>
+												</div>
+											
+										
+										
+										
+											<span class="author">
+												13 сентября 2013 г. 11:07:13
+												
+													Ishayahu Test
+												
+											</span>
+									</div>
+								</td>
+							</form>
+						</tr>
+					
+						<tr>
+							<form action="" method="post">
+								<input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' />
+								<td style="padding: 0px 0px 0px 0%;"> 
+									
+									
+										Line breaks are not preserved in inline literals. Although a reStructuredText parser will preserve runs of spaces in its output, the final representation of the processed document is dependent on the output formatter, thus the preservation of whitespace cannot be guaranteed. If the preservation of line breaks and/or other whitespace is important, literal blocks should be used.<br />
+									
+									
+									
+									
+									<br />
+									<div class="comment_buttons" id="answer_to_note_5">
+										
+										
+											
+											
+												<input type="hidden" name="num" value="5" />
+                                                <input type="submit" value=" " title="Редактировать комментарий" name="edit_comment" class="edit_comment"/>
+												<input type="submit" value=" " title="Удалить комментарий" name="del_comment" class="delete_comment"/>
+												<div class="button_as_link">
+													<input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_5',5)"/>
+												</div>
+											
+										
+										
+										
+											<span class="author">
+												13 сентября 2013 г. 11:07:05
+												
+													Ishayahu Test
+												
+											</span>
+									</div>
+								</td>
+							</form>
+						</tr>
+					
+            </table>
+            
+            
+                <form method="post" action="">
+            
+                <input type='hidden' name='csrfmiddlewaretoken' value='KF1BdAtctY6gvEGSAwgPLCJle3bGNQhI' />
+                <table border=1>
+                    <tr><th><label for="id_note">Комментарий:</label></th><td><textarea cols="40" id="id_note" name="note" rows="10">
+</textarea></td></tr>
+                </table>
+                
+                <input type="submit" value="Сохранить комментарий" name="add_comment" /> 
+            </form>
+	</div>
+			   
+	            
+
+
+<script>
+	$(document).ready(function(){
+		// размещаем комментарий под описанием
+		$(".comments").offset({top:$(".client_description").height()+$(".client_description").offset().top+10})
+	})
+</script>
+        
+    </div>
+</body>
+</html>

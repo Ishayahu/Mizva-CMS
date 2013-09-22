@@ -16,4 +16,4 @@ class note_with_indent():
         self.author = note.author
         self.timestamp = note.timestamp
         self.indent = '&#9676;'*indent
-        self.indent_pix = 4*indent
+        self.indent_pix = 15*indent

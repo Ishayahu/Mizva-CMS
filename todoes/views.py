@@ -87,7 +87,8 @@ def new_client(request):
     else:
         form = l_forms[lang]['NewClientForm']()
     #set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
+    # return render_to_response(languages[lang]+'new_ticket.html', {'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
+	return render_to_response(languages[lang]+'edit_ticket.html', {'worker':fio,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
 
 @login_required
 def client_claims(request,client_id):

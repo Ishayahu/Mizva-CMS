@@ -344,7 +344,7 @@ def edit_claim(request,claim_id):
         return HttpResponseRedirect("/client_claims/"+str(client_full.id))
     c.get_cash = str(c.get_cash).replace(',','.')
     c.discount = str(c.discount).replace(',','.')
-    return render_to_response(languages[lang]+'edit_payment.html', {'claim':c,'bdikot':b,'mezuzot':ms,'tfilins':ts,'workers':workers,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
+    return render_to_response(languages[lang]+'edit_payment.html', {'worker':fio,'claim':c,'bdikot':b,'mezuzot':ms,'tfilins':ts,'workers':workers,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
 @login_required
 def delete_asset(request,asset_type,id):
     lang=select_language(request)

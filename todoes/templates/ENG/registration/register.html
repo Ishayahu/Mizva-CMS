@@ -1,27 +1,18 @@
-{% extends "ENG/base.html" %}
+{% extends "RUS/base.html" %}
 {% block title %}
-Create account
+New user
 
 {% endblock %}
 {% block content %}
 
 {% if form.errors %}
-    <p class="error">Wrong login or password</p>
+    <p class="error">Wrong user name or password</p>
 {% endif %}
-<h1>Create account</h1>
+<h1>Create new user</h1>
 <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Sign In" />
+    <input type="submit" value="Register" />
 </form>
-<script>
-    $(function (){
-        $("label")[0].textContent="Login";
-        $("label")[1].textContent="Password";
-        $("label")[2].textContent="Repeat password";
-        $(".helptext")[0].textContent = "Required. No more as 30 symbols. Use only letters, numbers and @.+-_."
-        $(".helptext")[1].textContent = "Enter password one more time"
-    }
-    )
-</script>
+
 {% endblock %}

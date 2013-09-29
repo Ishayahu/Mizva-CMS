@@ -1,6 +1,6 @@
 {% extends "ENG/base.html" %}
 {% block title %}
-    All clients
+    List of clients
 {% endblock %}
 {% block style %}
     <style>
@@ -21,7 +21,9 @@
     <meta http-equiv="refresh" content="60">
 {% endblock %}
 {% block content %}
-	<div style="height:10px"></div>
+    <p><a href="/">Home page</a></p>
+    {# <p><a href="/deleted_clients/">К списку удалённых задач</a></p> #}
+    <hr />
     <form action="" method="post">
         {% csrf_token %}
         {{ form.as_table }}
@@ -47,7 +49,7 @@
     
     {# Если не найдена задача #}
     {% if not_finded and not finded_tasks %}
-        <h1>Client doesn't found</h1>
+        <h1>Requested client didn't find ((</h1>
     {% endif %}
     
     {# Если найдена задача #}

@@ -1,189 +1,303 @@
-{% extends "ENG/base.html" %}
+{% extends "ENG/base_big.html" %}
 {% block title %}
     {{task.fio}}
 {% endblock %}
 {% block style %}
-    <style>
-       .leftstr, .rightstr {
-        float: left; /* Обтекание справа */ 
-        width: 50%; /* Ширина текстового блока */ 
-       }
-       .rightstr {
-        text-align: right; /* Выравнивание по правому краю */ 
-       }
-       .author {
-        text-align: right; /* Выравнивание по правому краю */ 
-        width: 100%;
-       }
-      </style>
-      <script>
-        var was_selected = []
-        var notice = true
-        function del_selection(){ 
-            var worker_select = document.getElementById("id_workers");
-            if (window.notice) {
-                // если снимаем выделение
-                for (var i=0; i<worker_select.options.length; i++) {
-                    var option = worker_select.options[i];
-                    if(option.selected) {
-                        window.was_selected[i] = true
-                    } else {
-                        window.was_selected[i] = false
-                    }
-                }
-                worker_select.selectedIndex=-1;
-            } else {
-                // если восстанавливаем выделение
-                for (var i=0; i<worker_select.options.length; i++) {
-                    var option = worker_select.options[i];
-                    if(window.was_selected[i]) {
-                        option.selected = true
-                    }
-                }
-            }
-            window.notice = ! window.notice
-        }
-        function answer_to_note(div_id,note_id){
-            document.getElementById(div_id).outerHTML = "<form action='' method='post'>{% csrf_token %}<textarea id='id_note' rows='10' cols='40' name='answer'></textarea><input type='hidden' name='to_note' value='"+note_id+"' /><input type='submit' value='Ответить на комментарий' name='answer_to_comment' /></form>";
-        }
+  <script>
+	var was_selected = []
+	var notice = true
+	function del_selection(){ 
+		var worker_select = document.getElementById("id_workers");
+		if (window.notice) {
+			// если снимаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(option.selected) {
+					window.was_selected[i] = true
+				} else {
+					window.was_selected[i] = false
+				}
+			}
+			worker_select.selectedIndex=-1;
+		} else {
+			// если восстанавливаем выделение
+			for (var i=0; i<worker_select.options.length; i++) {
+				var option = worker_select.options[i];
+				if(window.was_selected[i]) {
+					option.selected = true
+				}
+			}
+		}
+		window.notice = ! window.notice
+	}
+	function answer_to_note(div_id,note_id){
+		document.getElementById(div_id).outerHTML = "<form action='' method='post'>{% csrf_token %}<textarea id='id_answer_note' rows='10' cols='40' name='answer'></textarea><input type='hidden' name='to_note' value='"+note_id+"' /><input type='submit' value='Answer' name='answer_to_comment' /></form>";
+	}
 
-      </script>
+  </script>
 {% endblock %}
 {% block content %}
-    {# <p class="leftstr"><a href="/">To main page</a></p> #}
-    {# <p class="rightstr">Hello, {{ fio.fio }}!</p> #}
+	<div class="header_title_left">
+		Client
+	</div>
+	<div class="header_title_right">
+		Comments
+	</div>
+
     {% if my_error %}
         {% for error in my_error %}
             <h2>{{error}}</h2><br />
         {% endfor %}
     {% endif %}
 
-    {% if task.confirmed %} 
-        <h2>Задача завершена и подтверждена</h2>
-    {% endif %}
-    <br />
-    <table border=0>
-    <tr>
-        <td>
-            <table border=1>
-            <tr><th colspan="2">Client: {{task.fio}}</th></tr>
-                <tr><td>Tel</td><td>+7-{{task.tel}}</td></tr>
-                <tr><td>E-mail</td><td>{{task.mail}}</td></tr>
-                <tr><td>Worker</td><td>{{task.worker.fio}};+7-{{task.worker.tel}}</td></tr>
-                {# <tr><td>Приоритет</td><td>{{task.priority}}</td></tr> #}
-                <tr><td>Age</td><td>{{task.age}}</td></tr>
-                <tr><td>Spouse name</td><td>{{task.spouse_fio}}</td></tr>
-                <tr><td>Spouse phone</td><td>{{task.spouse_tel}}</td></tr>
-                <tr><td>Spouse e-mail</td><td>{{task.spouse_mail}}</td></tr>
-                <tr><td>Spouse age</td><td>{{task.spouse_age}}</td></tr>
-                <tr><td>Address</td><td>{{task.address}}</td></tr>
-                <tr><td>Home phone number</td><td>{{task.home_tel}}</td></tr>
-                <tr><td>Entering date</td><td>{{task.entering_date}}</td></tr>
-                <tr><td>Remembering date</td><td>{{task.when_to_reminder}}</td></tr>
-            </table>
-            {% for file in files %}
-                <img src="{{file.file.url}}" /><a href="/image_delete/{{file.id}}">X</a>
-            {% endfor %}
-                <p><a href="/edit/{{task.id}}">Edit description of a client</a></p>
-                <p><a href="/client_claims/{{task.id}}">History of claims</a></p>
+	{# аватар/ы пользователя #}
+	<div class="avatars">
+		<table width="100px">
+			{% for file in files %}
+				<tr>
+					<td>
+						<a href="{{file.file.url}}"><img src="{{file.file.url}}" height="100px" width="100px"/></a>
+						<br />
+						<a href="/image_delete/{{file.id}}"><img src="/media/icons/client_photo_delete.jpg" /></a>
+					</td>
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
 
-                <p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<input type="submit" value="Delete client" name="del_client" onclick="if (confirm('Shure?')) {return true} else {return false};"/></form></p>
-
-        </td>
-        <td>
-            {{task.html_description|safe}}
-            
-            {# Вывод таблицы с комментариями #}
-            
-            <table border=1>
-                <tr><th colspan="3">Notes</th></tr>
-                    {% for note in notes %}
-                        <tr>
-                            <form action="" method="post">
-                                {% csrf_token %}
-                                <td style="padding: 0px 0px 0px {{note.indent_pix}}%;"> 
-                                    {# {{note.indent|safe}} #}
-                                    {# {{note.id}};{{note_to_edit_id}} #}
-                                    {# Текст комментария #}
-                                    {% ifnotequal note.id note_to_edit_id %}
-                                        {#{{note.indent}}!!#}
-                                        {{note.note|safe}}<br />
-                                        <div class="author"><i>
-                                            {{note.timestamp}}
-                                            {% if note.author %}
-                                                {{note.author.fio}}
-                                            {% endif %}
-                                        </i></div>
-                                    {% endifnotequal %}
-                                    {# Поле для редактирования коммента #}
-                                    {% ifequal note.id note_to_edit_id %}
-                                        <textarea rows="10" cols="40" name="text_note_to_edit" >{{note.note}}</textarea>
-                                    {% endifequal %}
-                                </td>
-                                {# Если автор комментария - можно редактировать #}
-                                {% ifequal note.author.login fio.login %}
-                                    {% ifequal note.id note_to_edit_id %}
-                                        <td colspan=2><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="Save note" name="save_edited_comment" /></td>
-                                    {% endifequal %}
-                                    {% ifnotequal note.id note_to_edit_id %}
-                                        <td><input type="submit" value="&#9998;" title="Edit note" name="edit_comment" /><input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="&#10005;" title="Delete note" name="del_comment" /><div id="answer_to_note_{{note.id}}"><input type="button" value="Answer to note" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/></div></td>
-                                    {% endifnotequal %}
-                                {% endifequal %}
-                                {# Если не автор комментария - только отвечать &#9997; #}
-                                {% ifnotequal note.author.login fio.login %}
-                                    <td><div id="answer_to_note_{{note.id}}"><input type="button" value="Answer to note" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" /></div></td>
-                                {% endifnotequal %}
-                            </form>
-                        </tr>
-                    {% endfor %}
+	<div class="client_info">
+		<table border=1>
+			<tr>
+				<th>
+					{{task.fio}}
+				</th>
+			</tr>
+			<tr>
+				<td>
+					<b>Phone:</b>
+					<br />
+					{% if task.tel %}
+						+7-{{task.tel}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>E-mail:</b>
+					<br />
+					{% if task.mail %}
+						{{task.mail}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Worker:</b>
+					<br />
+					{% if task.worker %}
+						{{task.worker.fio}};<br />+7-{{task.worker.tel}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+			<tr>
+				<td>
+					<b>Age</b>: 					
+					{% if task.age %}
+						{{task.age}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Spouse's information:</b>
+					<br />
+					{% if task.spouse_fio %}
+						{{task.spouse_fio}}
+						{% if task.spouse_age %}
+							, {{task.spouse_age}} years old
+						{% endif %}
+						<br />
+						{% if task.spouse_mail %}
+							{{task.spouse_mail}}
+							<br />
+						{% endif %}
+						{% if task.spouse_tel %}
+							+7-{{task.spouse_tel}}
+						{% endif %}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Address:</b>
+					<br />
+					{% if task.address %}
+						{{task.address}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Home phone number:</b>
+					<br />
+					{% if task.home_tel %}
+						{{task.home_tel}}
+					{% else %}
+						Unknown
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Adding date:</b>
+					<br />
+					{{task.entering_date}}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>Date reminder:</b>
+					<br />
+					{{task.when_to_reminder}}
+				</td>
+			</tr>
+		</table>
+		<div class="client_links">
+			<p><a href="/edit/{{task.id}}">Edit information</a></p>
+			<p><a href="/client_claims/{{task.id}}">Claims history</a></p>
+			<p><form action="/delete/{{task.id}}/" method="post">{% csrf_token %}<div class="button_as_link"><input type="submit" value="Delete client" name="del_client" onclick="if (confirm('Are you sure?')) {return true} else {return false};"/></div></form></p>
+		</div>
+			<br />
+			<p><a href="/">To main page</a></p>
+	</div>
+	<div class="client_description">
+		<b>Client description:</b>
+		<br />
+		{{task.html_description|safe}}	
+	</div>
+		
+	<div class="comments">	
+				{# Вывод таблицы с комментариями #}
+				
+				<table class="comment_table">
+					{% for note in notes %}
+						<tr>
+							<form action="" method="post">
+								{% csrf_token %}
+								<td style="padding: 0px 0px 0px {{note.indent_pix}}px;"> 
+									{# Текст комментария #}
+									{% ifnotequal note.id note_to_edit_id %}
+										{{note.note|safe}}<br />
+									{% endifnotequal %}
+									
+									{# Поле для редактирования коммента #}
+									{% ifequal note.id note_to_edit_id %}
+										<textarea rows="10" cols="40" name="text_note_to_edit" >{{note.note}}</textarea>
+									{% endifequal %}
+									<br />
+									<div class="comment_buttons" id="answer_to_note_{{note.id}}">
+										{# Если автор комментария - можно редактировать #}
+										{% ifequal note.author.login fio.login %}
+											{% ifequal note.id note_to_edit_id %}
+												<input type="hidden" name="num" value="{{note.id}}" /><input type="submit" value="Save comment" name="save_edited_comment" />
+											{% endifequal %}
+											{% ifnotequal note.id note_to_edit_id %}
+												<input type="hidden" name="num" value="{{note.id}}" />
+                                                <input type="submit" value=" " title="Edit comment" name="edit_comment" class="edit_comment"/>
+												<input type="submit" value=" " title="Delete comment" name="del_comment" class="delete_comment"/>
+												<div class="button_as_link">
+													<input type="button" value="Answer" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})"/>
+												</div>
+											{% endifnotequal %}
+										{% endifequal %}
+										{# Если не автор комментария - только отвечать &#9997; #}
+										{% ifnotequal note.author.login fio.login %}
+											<div class="button_as_link">
+												<input type="button" value="Answer" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" />
+											</div>
+										{% endifnotequal %}
+											<span class="author">
+												{{note.timestamp}}
+												{% if note.author %}
+													{{note.author.fio}}
+												{% endif %}
+											</span>
+									</div>
+								</td>
+							</form>
+						</tr>
+					{% endfor %}
             </table>
-            
+            {# Вставляем разделительную линию между комментами и добавлением нового #}
+			
+			<div class="comment_separator">
+				<hr>
+			</div>
+			
             {% if form.is_multipart %}
                 <form enctype="multipart/form-data" method="post" action="">
             {% else %}
                 <form method="post" action="">
             {% endif %}
-            {# <form action="" method="post" enctype="multipart/form-data" > #}
                 {% csrf_token %}
-                <table border=1>
+                <table border=0>
                     {{ form.as_table }}
                 </table>
-                {# <input type="checkbox" onClick="del_selection()" /> Не уведомлять о комментарии #}
                 <input type="submit" value="Save comment" name="add_comment" /> 
             </form>
-        </td>
-    </table>
-    
-    <ul>
-        {% for file in files %}
-            <li> <a href="{{file.get_absolute_url}}">{{file.name}}</a>
-        {% endfor %}
-    </ul>
-    
-    
-{% comment %}
-    class Task(models.Model):
-        name = models.CharField(max_length=140)
-        description = models.TextField()
-        client = models.ForeignKey(Client)
-        priority = models.PositiveSmallIntegerField()
-        category = models.ForeignKey(Categories)
-        start_date = models.DateTimeField()
-        due_date = models.DateTimeField()
-        done_date = models.DateTimeField(blank = True, null = True)
-        worker = models.ForeignKey(Worker)
-        resource = models.ForeignKey(Resource, blank = True, null = True)
-        note = models.ManyToManyField(Note, related_name = "for_task",blank = True, null = True)
-        file = models.ForeignKey(File, blank = True, null = True)
-        percentage = models.PositiveSmallIntegerField()
-        pbu = models.ForeignKey(ProblemByUser)
-        pbw = models.ForeignKey(ProblemByWorker,blank = True, null = True)
-        confirmed = models.NullBooleanField(blank = True, null = True)
-        confirmed_date = models.DateTimeField(blank = True, null = True)
-        def __unicode__(self):
-            return u"\t".join((self.name,self.description,self.worker.fio,str(self.percentage)))
-{% endcomment %}            
+	</div>
+			   
+	{% comment %}
+		class Task(models.Model):
+			name = models.CharField(max_length=140)
+			description = models.TextField()
+			client = models.ForeignKey(Client)
+			priority = models.PositiveSmallIntegerField()
+			category = models.ForeignKey(Categories)
+			start_date = models.DateTimeField()
+			due_date = models.DateTimeField()
+			done_date = models.DateTimeField(blank = True, null = True)
+			worker = models.ForeignKey(Worker)
+			resource = models.ForeignKey(Resource, blank = True, null = True)
+			note = models.ManyToManyField(Note, related_name = "for_task",blank = True, null = True)
+			file = models.ForeignKey(File, blank = True, null = True)
+			percentage = models.PositiveSmallIntegerField()
+			pbu = models.ForeignKey(ProblemByUser)
+			pbw = models.ForeignKey(ProblemByWorker,blank = True, null = True)
+			confirmed = models.NullBooleanField(blank = True, null = True)
+			confirmed_date = models.DateTimeField(blank = True, null = True)
+			def __unicode__(self):
+				return u"\t".join((self.name,self.description,self.worker.fio,str(self.percentage)))
+	{% endcomment %}            
 
 
-
+<script>
+	$(document).ready(function(){
+		// размещаем комментарий под описанием
+		$(".comments").offset({top:$(".client_description").height()+$(".client_description").offset().top+10});
+		$("#id_note").text("Enter new comment here")
+		$("#id_note").css({color:"grey"})
+		$("#id_note").height(240)
+		$("#id_note").width(555)
+		$("#id_note").width(555)
+		$("#id_note").bind('click',function(){
+			$("#id_note").text("");
+			$("#id_note").css({color:"black"});
+			$("#id_note").unbind('click');
+		})
+	})
+</script>
 {% endblock %}

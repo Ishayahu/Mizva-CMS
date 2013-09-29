@@ -17,36 +17,18 @@
       }
 
     </style>
-    <link rel="stylesheet" type="text/css" href="/media/css/main.css" /> 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-			<div class="hello">
-				Hi, {{ worker.fio }}
-			</div>
-			<div class="to_main">
-				{% ifnotequal path "+" %}
-					<a href="/">To main</a>
-				{% endifnotequal %}
-			</div>
-			<div class="logout">
-				<a href="/accounts/logout/">Logout</a>
-			</div>
-			<div class="language">
-				<a href="/language/ru/{{path}}">ru</a> | <a href="/language/eng/{{path}}">eng</a>
-			</div>
-			<div class="">
-			
-			</div>
-			<div class="version">
-				<a target="_new" href="/media/versions.html">v0.0.2a</a>
-			</div>
-        </div>
-		<div class="separator">
-		</div>
-        {% block content %}{% endblock %}        
+    <div class ="leftstr">
+        <p><a href="/">To main page</a></p>
+        <p>Hello, {{ worker.fio }}</p>
     </div>
+    <div class ="rightstr">
+        <p><a href="/language/ru/{{path}}">ru</a>|<a href="/language/eng/{{path}}">eng</a></p>
+        <p><a href="/accounts/logout/">Logout</a></p>
+        <p><a target="_new" href="/media/versions.html">v0.0.2a</a></p>
+    </div>
+    {% block content %}{% endblock %}
 </body>
 </html>

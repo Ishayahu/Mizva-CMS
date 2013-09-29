@@ -21,9 +21,7 @@
     <meta http-equiv="refresh" content="60">
 {% endblock %}
 {% block content %}
-    <p><a href="/">На главную</a></p>
-    {# <p><a href="/deleted_clients/">К списку удалённых задач</a></p> #}
-    <hr />
+	<div style="height:10px"></div>
     <form action="" method="post">
         {% csrf_token %}
         {{ form.as_table }}

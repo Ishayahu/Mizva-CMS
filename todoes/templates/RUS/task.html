@@ -158,7 +158,11 @@
 				<td>
 					<b>Домашний телефон:</b>
 					<br />
-					{{task.home_tel}}
+					{% if task.home_tel %}
+						{{task.home_tel}}
+					{% else %}
+						Не указан
+					{% endif %}
 				</td>
 			</tr>
 			<tr>
@@ -226,7 +230,9 @@
 										{% endifequal %}
 										{# Если не автор комментария - только отвечать &#9997; #}
 										{% ifnotequal note.author.login fio.login %}
-											<div><input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" /></div>
+											<div class="button_as_link">
+												<input type="button" value="Ответить" onclick="answer_to_note('answer_to_note_{{note.id}}',{{note.id}})" />
+											</div>
 										{% endifnotequal %}
 											<span class="author">
 												{{note.timestamp}}

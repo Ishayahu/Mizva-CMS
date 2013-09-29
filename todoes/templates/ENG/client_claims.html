@@ -1,21 +1,8 @@
-{% extends "ENG/base.html" %}
+{% extends "ENG/base_big.html" %}
 {% block title %}
-    Claim history for {{task.fio}}
+    Claims history for: {{task.fio}}
 {% endblock %}
 {% block style %}
-    <style>
-       .leftstr, .rightstr {
-        float: left; /* Обтекание справа */ 
-        width: 50%; /* Ширина текстового блока */ 
-       }
-       .rightstr {
-        text-align: right; /* Выравнивание по правому краю */ 
-       }
-       .author {
-        text-align: right; /* Выравнивание по правому краю */ 
-        width: 100%;
-       }
-    </style>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
     <script>
         function new_worker() {
@@ -34,18 +21,19 @@
         function div_remove(id){
             $(id).remove()
         }
-        function new_mezuza(){
+		function new_mezuza(){
             claim_content= $("#claim_content")
             //var html = claim_content.html();
             var html=''
-            html+='<div id="mezuza_'+m+'">Mezuza №'+m+': <label>Description/Place<input type="text" name="mezuza_desc_'+m+'"></label>\n';
-            html+='<label>Worker<select name="mezuza_worker_'+m+'">';
+            html+='<tr id="mezuza_'+m+'"><td class="claim_content_td"><span class="mt_name">Mezuzah №'+m+': </span></td><td class="claim_content_td"><label class="mt_desc_label">Description/Place</label></td><td><input class="mt_desc_input" type="text" name="mezuza_desc_'+m+'">\n';
+            html+='</td><td class="claim_content_td"><label class="mt_worker_label">Worker</label></td><td class="claim_content_td"><select class="mt_work_input" name="mezuza_worker_'+m+'">';
             {% for worker in workers %}
                 html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
             {% endfor %}
-            html+='</select></label>\n';
-            html+='<label>Price<input type="number" class="notcheck" name="mezuza_payment_'+m+'"></label>\n';
-            html+='<input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>';
+            html+='</select>\n';
+            html+='</td><td class="claim_content_td"><label class="mt_price_label">Price</label><input type="number" class="mt_price_input" class="notcheck" name="mezuza_payment_'+m+'">\n';
+            {# html+='</td><td class="claim_content_td"><input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>'; #}
+			html+='</td><td class="claim_content_td"><a class="mt_remove" onclick=\'div_remove("#mezuza_'+m+'")\' ><img src="/media/icons/client_photo_delete.jpg" style="cursor: pointer;position: relative;top: 4;" /></a></td></tr>';
             //claim_content.html(html);
             claim_content.append(html);
             $("#number_of_mezuzot").attr("value",m)
@@ -55,41 +43,43 @@
             claim_content= $("#claim_content")
             var html=''
             //var html = claim_content.html();
-            html+='<div id="tfilin_'+m+'">Tfillin №'+t+': <label>Description/Place<input type="text" name="tfilin_desc_'+t+'"></label>\n';
-            html+='<label>Worker<select name="tfilin_worker_'+t+'">';
+            html+='<tr id="tfilin_'+m+'"><td class="claim_content_td"><span class="mt_name">Tefillin №'+t+': </span></td><td class="claim_content_td"><label class="mt_desc_label">Description/Place</label></td><td><input class="mt_desc_input" name="tfilin_desc_'+t+'">\n';
+            html+='</td><td class="claim_content_td"><label class="mt_worker_label">Worker</label></td><td class="claim_content_td"><select class="mt_work_input" name="tfilin_worker_'+t+'">';
             {% for worker in workers %}
                 html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
             {% endfor %}
             html+='</select></label>\n';
-            html+='<label>Price<input type="number" class="notcheck" name="tfilin_payment_'+t+'"></label>\n';
-            html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';
+            html+='</td><td class="claim_content_td"><label class="mt_price_label">Price</label><input type="number" class="mt_price_input" class="notcheck" name="tfilin_payment_'+t+'">\n';
+            {# html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';#}
+			html+='</td><td class="claim_content_td"><a onclick=\'div_remove("#tfilin_'+m+'")\' ><img src="/media/icons/client_photo_delete.jpg" style="cursor: pointer;position: relative;top: 4;" /></a></td></tr>';
             //claim_content.html(html);
+			console.log(html)
             claim_content.append(html);
             $("#number_of_tfilins").attr("value",t)
             t++;
         }
-        function bdikot(){
-            claim_content= $("#claim_content")
-            var html=''
-            //var html = claim_content.html();
-            {% for item in mezuzas %}
-                 html+='<label>Mezuza {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}"></label>\n';
-                 html+='<label>Price<input type="number" class="check" id="mezuza_{{item.id}}_payment"></label>\n<br />';
-            {% endfor %}
-            {% for item in tfilins %}
-                 html+='<label>Tfillin {{item.description}}: <input type="checkbox" name="tfilin_{{item.id}}"></label>\n';
-                 html+='<label>Price<input type="number" class="check" id="tfilin_{{item.id}}_payment"></label>\n<br />';            
-            {% endfor %}
-            html+='<label>Worker<select name="bdikot_worker">';
-            {% for worker in workers %}
-                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
-            {% endfor %}
-            html+='</select></label>\n';
-            
-            //claim_content.html(html);
-            claim_content.append(html);
-            t++;
-        }
+		function bdikot(){
+			claim_content= $("#claim_content")
+			var html='<tr></tr>'
+			//var html = claim_content.html();
+			{% for item in mezuzas %}
+				 html+='<tr><td><span class="mt_name">Mezuzah {{item.description}}: </span></td><td><input type="checkbox" name="mezuza_{{item.id}}"></td>\n';
+				 html+='<td><label>Price</label></td><td><input type="number" class="check" id="mezuza_{{item.id}}_payment"></td></tr>';
+			{% endfor %}
+			{% for item in tfilins %}
+				 html+='<tr><td><span class="mt_name">Tefillin {{item.description}}: </span></td><td><input type="checkbox" name="tfilin_{{item.id}}"></td>\n';
+				 html+='<td><label>Price</label></td><td><input type="number" class="check" id="tfilin_{{item.id}}_payment"></td></tr>';            
+			{% endfor %}
+			html+='<tr><td><span class="mt_name">Worker</span></td><td><select name="bdikot_worker">';
+			{% for worker in workers %}
+				html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+			{% endfor %}
+			html+='</select></td></tr>';
+			
+			//claim_content.html(html);
+			claim_content.append(html);
+			t++;
+		}
         function isNumber(n) {
             return !isNaN(parseFloat(n)) && isFinite(n) && parseFloat(n)>=0;
         }
@@ -166,55 +156,95 @@
 {% endblock %}
 {% block content %}
 
-    <div id="message"></div>
-    <input type="button" title='Add new claim' onclick='new_claim()' value="New claim" />
-    <input type="button" title='Add new worker' onclick='new_worker()' value="New worker" />
-    
-    <div id="new_worker" style="display: none;"></div>
+	<div class="header_title_center">
+		{{client.fio}}, all claims
+	</div>
+    <div id="message">
+	</div>
+	<div class="for_button">
+		<input class="add_claim" type="button" title='Add new claim' onclick='new_claim()' value="New claim" />
+	
+		<input class="add_worker" type="button" title='Add new worker' onclick='new_worker()' value="New worker" />
+    </div>
+	<div class="separator_grey">
+		<hr />
+	</div>
     <div id="new_claim" style="display: none;">
+		<div class="title_20px">
+			Adding new claim
+		</div>
+
         <div class='error'></div>
-        <input type="button" title='Add mezuza' onclick='new_mezuza()' value="+Mezuza" />
-        <input type="button" title='Add tfillin' onclick='new_tfilin()' value="+Tfilin" />
+        <input class="button" id="add_mezuza_button" type="button" title='Add mezuzah' onclick='new_mezuza()' value="+Mezuzah" />
+        <input class="button" id="add_tfilin_button" type="button" title='Add tefillin' onclick='new_tfilin()' value="+Tefillin" />
         {% if can_bdika %}
-            <input type="button" title='Add bdikot' onclick='bdikot()' value="+Bdikot" />
+            <input class="button" id="add_bdika_button" type="button" title='Add bdikot' onclick='bdikot()' value="+Bdikot" />
         {% endif %}
         <form action="" method='post' id='myform'>
             {% csrf_token %}
             <div id='claim_content'>
             
             </div>
-            <input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
-            <input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
-            <input type="hidden" id="bdikot_text" name="bdikot_text" value="0" />
-            <label>Already paid<input type="number" name="get_cash" value=0></label><br />
-            <label>Discount<input type="number" name="discount" value=0></label>
-            <input type="submit" value="Done" name="done" />
+			<div id="claim_shared_fields">
+				<input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
+				<input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
+				<input type="hidden" id="bdikot_text" name="bdikot_text" value="0" />
+				<label>Paid</label><input id="get_cash" type="number" name="get_cash" value=0><p></p>
+				<label>Discount</label><input type="number" id="discount" name="discount" value=0><p></p>
+				<input id="new_claim_submit" class="button" type="submit" value="Send" name="done" />
+			</div>
         </form>
+		<div class="separator_grey">
+			<hr />
+		</div>
     </div>
-    <br />
-    <table border=1>
-        <tr>
-            <th>Claim date</th>
-            <th>Description</th>
-            <th>Cost</th>
-            <th>Paid</th>
-            <th></th>
-        </tr>
-        {% for claim in claims %}
-            <tr>
-                <td>{{claim.date_of_claim}}</td>
-                <td>{{claim.description}}</td>
-                <td>{{claim.payment}} руб.</td>
-                <td>{{claim.get_cash}} руб.</td>
-                <td>
-                    <a href="/print/claim/{{claim.id}}" target="_blank" title="Print cheque">&#12212;</a>
-                    <a href="/edit_claim/{{claim.id}}" title="Edit">&#9998;</a>
-                    {# <a href="/debt/{{claim.id}}" title='Оплата долга' onclick='if (a = prompt("Введите сумму доплаты","{{claim.rest_cash}}")) {window.location.replace("/debt/4/"+a)} else {return false}'>$</a> #}
-                    <input type="button" title='Debt' onclick='if (a = prompt("Enter debt value","{{claim.rest_cash}}")) {window.location.replace("/debt/{{claim.id}}/"+a)} else {return false}' value="$" />
-                    <a href="/delete_claim/{{claim.id}}" title='Delete claim' onclick="if (confirm('Are you shure?')) {return true} else {return false};">X</a>
-                </td>
-            </tr>
-         {% endfor %}
-    </table>
+	<div id="new_worker" style="display: none;"></div>
 
+    <br />
+	<div class="claims">
+		<div class="clients_title">
+			Claims history
+		</div>
+		<table>
+			<tr>
+				<th>Claim's date</th>
+				<th>Description</th>
+				<th>Cost</th>
+				<th>Paid</th>
+				<th></th>
+			</tr>
+			<tr>
+				<td colspan=5>
+					<div class="table_header_separator"><hr /></div>
+				</td>
+			</tr>
+
+			{% for claim in claims %}
+				<tr>
+					<td>{{claim.date_of_claim}}</td>
+					<td>{{claim.description}}</td>
+					<td>{{claim.payment}} руб.</td>
+					<td>{{claim.get_cash}} руб.</td>
+					<td>
+						<a href="/delete_claim/{{claim.id}}" title='Delete claim' onclick="if (confirm('Уверены?')) {return true} else {return false};"><img src="/media/icons/client_photo_delete.jpg" /></a>
+						
+						<a href="/edit_claim/{{claim.id}}" title="Edit"><img src="/media/icons/order_history_edit.jpg" /></a>
+						
+						<a {# href="/debt/{{claim.id}}" #} class="button_payment" title='Debt payment' onclick='if (a = prompt("Enter the amount of additional payments","{{claim.rest_cash}}")) {var b="/debt/{{claim.id}}/"+a;window.location.replace(b)} else {return false}'><img src="/media/icons/order_history_cash.jpg" /></a>
+						
+						
+						<a href="/print/claim/{{claim.id}}" target="_blank" title="Print check"><img src="/media/icons/order_history_print.jpg" /></a>
+					</td>
+				</tr>
+				<tr>
+					<td colspan=5>
+						<div class="table_separator"><hr /></div>
+					</td>
+				</tr>
+			 {% endfor %}
+		</table>
+	</div>
+	<div class="footer_links">
+		<a href="/">To main page</a>
+	</div>
 {% endblock %}

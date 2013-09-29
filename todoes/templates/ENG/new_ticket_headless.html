@@ -3,8 +3,16 @@
     {% endif %}
     <form method="post" action="javascript:send('/new_worker/','new_worker_form','message');" id="new_worker_form">
         {% csrf_token %}
-        <table border=1>
-            {{ form.as_table }}
-        </table>
-    <input type="button" value="Send" onClick="send('/new_worker/','new_worker_form','message');" />
+		<div class="new_worker_table">
+			<div class="clients_title">
+				Adding new worker
+			</div>
+
+				{{ form.as_p }}
+		</div>
+    <input id="new_worker_submit" class="button" type="button" value="Send" onClick="send('/new_worker/','new_worker_form','message');" />
+	<div class="separator_grey">
+		<hr />
+	</div>
+
     </form>

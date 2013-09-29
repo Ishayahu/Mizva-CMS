@@ -1,0 +1,10 @@
+    {% if form.errors %}
+    {#    {{form.errors}} #}
+    {% endif %}
+    <form method="post" action="javascript:send('/new_worker/','new_worker_form','message');" id="new_worker_form">
+        {% csrf_token %}
+        <table border=1>
+            {{ form.as_table }}
+        </table>
+    <input type="button" value="Send" onClick="send('/new_worker/','new_worker_form','message');" />
+    </form>

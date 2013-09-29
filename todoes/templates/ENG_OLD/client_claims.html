@@ -1,0 +1,220 @@
+{% extends "ENG/base.html" %}
+{% block title %}
+    Claim history for {{task.fio}}
+{% endblock %}
+{% block style %}
+    <style>
+       .leftstr, .rightstr {
+        float: left; /* Обтекание справа */ 
+        width: 50%; /* Ширина текстового блока */ 
+       }
+       .rightstr {
+        text-align: right; /* Выравнивание по правому краю */ 
+       }
+       .author {
+        text-align: right; /* Выравнивание по правому краю */ 
+        width: 100%;
+       }
+    </style>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script>
+        function new_worker() {
+            $("#new_worker").show()
+            $("#new_worker").load("/new_worker/", function (result) {
+                //$("#new_worker").hide();
+                //location.reload();
+                                                    }
+            )
+        }
+        var m=1
+        var t=1
+        function new_claim() {
+            $("#new_claim").show()
+        }
+        function div_remove(id){
+            $(id).remove()
+        }
+        function new_mezuza(){
+            claim_content= $("#claim_content")
+            //var html = claim_content.html();
+            var html=''
+            html+='<div id="mezuza_'+m+'">Mezuza №'+m+': <label>Description/Place<input type="text" name="mezuza_desc_'+m+'"></label>\n';
+            html+='<label>Worker<select name="mezuza_worker_'+m+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Price<input type="number" class="notcheck" name="mezuza_payment_'+m+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#mezuza_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_mezuzot").attr("value",m)
+            m++;
+        }
+        function new_tfilin(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            html+='<div id="tfilin_'+m+'">Tfillin №'+t+': <label>Description/Place<input type="text" name="tfilin_desc_'+t+'"></label>\n';
+            html+='<label>Worker<select name="tfilin_worker_'+t+'">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            html+='<label>Price<input type="number" class="notcheck" name="tfilin_payment_'+t+'"></label>\n';
+            html+='<input type="button" onclick=\'div_remove("#tfilin_'+m+'")\' value="x" /><br /></div>';
+            //claim_content.html(html);
+            claim_content.append(html);
+            $("#number_of_tfilins").attr("value",t)
+            t++;
+        }
+        function bdikot(){
+            claim_content= $("#claim_content")
+            var html=''
+            //var html = claim_content.html();
+            {% for item in mezuzas %}
+                 html+='<label>Mezuza {{item.description}}: <input type="checkbox" name="mezuza_{{item.id}}"></label>\n';
+                 html+='<label>Price<input type="number" class="check" id="mezuza_{{item.id}}_payment"></label>\n<br />';
+            {% endfor %}
+            {% for item in tfilins %}
+                 html+='<label>Tfillin {{item.description}}: <input type="checkbox" name="tfilin_{{item.id}}"></label>\n';
+                 html+='<label>Price<input type="number" class="check" id="tfilin_{{item.id}}_payment"></label>\n<br />';            
+            {% endfor %}
+            html+='<label>Worker<select name="bdikot_worker">';
+            {% for worker in workers %}
+                html+='<option value="{{worker.id}}">{{worker.fio}}</option>';
+            {% endfor %}
+            html+='</select></label>\n';
+            
+            //claim_content.html(html);
+            claim_content.append(html);
+            t++;
+        }
+        function isNumber(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n) && parseFloat(n)>=0;
+        }
+        
+        $(document).ready(function(){
+            $('#myform').bind('submit', function(event) {
+                //$('[type=number]').each(function() {
+                //        $(this).css('border', '1px solid black');
+                //});
+                //var valid=true
+                $('[type=number][class=notcheck]').each(function() {
+                    if(!isNumber($(this).val())) {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid red');
+                        //valid=false
+                    }
+                });
+                //$('[type=number][class=check][]').each(function() {
+                //    if(!isNumber($(this).val())) {
+                //        event.preventDefault();
+                //        $(this).css('border', '2px solid green');
+                //    }
+                //});
+                //$('[type=text]').each(function() {
+                //        $(this).css('border', '1px solid black');
+                //});
+                $('[type=text]').each(function() {
+                    if($(this).val()=='') {
+                        event.preventDefault();
+                        $(this).css('border', '2px solid blue');
+                        //valid=false
+                    }
+                });
+                var b_txt='';
+                console
+                $('[type=checkbox]').each(function(){
+                    if ($(this).is(':checked')) {
+                        payment = "#"+$(this).attr('name')+"_payment"
+                        if (!isNumber($(payment).val())) {
+                            event.preventDefault();
+                            $(payment).css('border', '2px solid green');                        
+                            //valid=false
+                        } else {
+                        b_txt=b_txt+$(this).attr('name')+','+$(payment).val()+";"
+                        }
+                    }
+                });
+                $("#bdikot_text").val(b_txt)
+            });
+        });
+    function send(url,form_id,result_div) {
+        // Отсылаем паметры
+        $.ajax({
+                type: "POST",
+                url:  url,
+                data: $("#"+form_id).serialize(),
+                // Выводим то что вернул PHP
+                success: function(html)
+                {
+                        $("#"+result_div).empty();
+                        $("#"+result_div).append(html);
+                        // скрываем форму поставщика, открываем заказа и т.п.
+                        $("#new_worker").empty()
+                        $("#new_worker").hide()
+                },
+                error: function()
+                {
+                    $("#"+result_div).empty();
+                    $("#"+result_div).append("Error!");
+                }
+        });     
+            }
+    </script>
+{% endblock %}
+{% block content %}
+
+    <div id="message"></div>
+    <input type="button" title='Add new claim' onclick='new_claim()' value="New claim" />
+    <input type="button" title='Add new worker' onclick='new_worker()' value="New worker" />
+    
+    <div id="new_worker" style="display: none;"></div>
+    <div id="new_claim" style="display: none;">
+        <div class='error'></div>
+        <input type="button" title='Add mezuza' onclick='new_mezuza()' value="+Mezuza" />
+        <input type="button" title='Add tfillin' onclick='new_tfilin()' value="+Tfilin" />
+        {% if can_bdika %}
+            <input type="button" title='Add bdikot' onclick='bdikot()' value="+Bdikot" />
+        {% endif %}
+        <form action="" method='post' id='myform'>
+            {% csrf_token %}
+            <div id='claim_content'>
+            
+            </div>
+            <input type="hidden" id="number_of_mezuzot" name="number_of_mezuzot" value="0" />
+            <input type="hidden" id="number_of_tfilins" name="number_of_tfilins" value="0" />
+            <input type="hidden" id="bdikot_text" name="bdikot_text" value="0" />
+            <label>Already paid<input type="number" name="get_cash" value=0></label><br />
+            <label>Discount<input type="number" name="discount" value=0></label>
+            <input type="submit" value="Done" name="done" />
+        </form>
+    </div>
+    <br />
+    <table border=1>
+        <tr>
+            <th>Claim date</th>
+            <th>Description</th>
+            <th>Cost</th>
+            <th>Paid</th>
+            <th></th>
+        </tr>
+        {% for claim in claims %}
+            <tr>
+                <td>{{claim.date_of_claim}}</td>
+                <td>{{claim.description}}</td>
+                <td>{{claim.payment}} руб.</td>
+                <td>{{claim.get_cash}} руб.</td>
+                <td>
+                    <a href="/print/claim/{{claim.id}}" target="_blank" title="Print cheque">&#12212;</a>
+                    <a href="/edit_claim/{{claim.id}}" title="Edit">&#9998;</a>
+                    {# <a href="/debt/{{claim.id}}" title='Оплата долга' onclick='if (a = prompt("Введите сумму доплаты","{{claim.rest_cash}}")) {window.location.replace("/debt/4/"+a)} else {return false}'>$</a> #}
+                    <input type="button" title='Debt' onclick='if (a = prompt("Enter debt value","{{claim.rest_cash}}")) {window.location.replace("/debt/{{claim.id}}/"+a)} else {return false}' value="$" />
+                    <a href="/delete_claim/{{claim.id}}" title='Delete claim' onclick="if (confirm('Are you shure?')) {return true} else {return false};">X</a>
+                </td>
+            </tr>
+         {% endfor %}
+    </table>
+
+{% endblock %}

@@ -108,7 +108,7 @@ def client_claims(request,client_id):
         number_of_mezuzot = request.POST['number_of_mezuzot']
         number_of_tfilins = request.POST['number_of_tfilins']
         c = Claim(discount = request.POST['discount'],
-                    date_of_claim = datetime.datetime.now(),
+                    date_of_claim = request.POST['claim_date'],
                     get_cash = request.POST['get_cash'],
                     )
         if c.get_cash:
@@ -222,7 +222,8 @@ def client_claims(request,client_id):
         can_bdika=False
         if mezuzas or tfilins:
             can_bdika=True
-    return render_to_response(languages[lang]+'client_claims.html', {'can_bdika':can_bdika,'client':client_full,'worker':fio,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins, 'method':method,'claims':claims,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
+        today = str(datetime.datetime.today()).split('.')[0]
+    return render_to_response(languages[lang]+'client_claims.html', {'today':today,'can_bdika':can_bdika,'client':client_full,'worker':fio,'workers':workers,'mezuzas':mezuzas,'tfilins':tfilins, 'method':method,'claims':claims,'path':request.path.replace("/","+").replace("/","+")},RequestContext(request))
 @login_required
 def edit_claim(request,claim_id):
     lang=select_language(request)
@@ -527,39 +528,40 @@ def set_reminder(request,task_type,task_id):
         today = str(datetime.datetime.now().day)+"/"+str(datetime.datetime.now().month)+"/"+str(datetime.datetime.now().year)
     set_last_activity(user,request.path)
     return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
-@login_required
-def move_to_call(request,task_type,task_id):
-    if not acl(request,task_type,task_id):
-        request.session['my_error'] = u'Нет права доступа к этой задаче!'
-        return HttpResponseRedirect("/tasks/")
-    user = request.user.username
-    method = request.method
-    data = 0
-    time = 0
-    try:
-        task_full = task_types[task_type].objects.get(id = task_id)
-    except:
-        return HttpResponseRedirect('/tasks/')
-    if request.method == 'POST':
-        if 'datepicker' in request.POST:
-            data = request.POST['datepicker']
-        if 'time' in request.POST:
-            time = request.POST['time']
-        dtt = datetime.datetime(*map(int,([data.strip().split('/')[2],data.strip().split('/')[1],data.strip().split('/')[0]]+time.strip().split(':'))))
-        task_full.when_to_reminder = dtt
-        cat_call = Categories.objects.get(name = 'Звонки')
-        task_full.category = cat_call
-        task_full.save()
-        set_last_activity(user,request.path)
-        return HttpResponseRedirect('/tasks/')
-    else:
-        after_hour = str(datetime.datetime.now().hour+1)+":"+str(datetime.datetime.now().minute)
-        today = str(datetime.datetime.now().day)+"/"+str(datetime.datetime.now().month)+"/"+str(datetime.datetime.now().year)
-    set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
+# @login_required
+# def move_to_call(request,task_type,task_id):
+    # if not acl(request,task_type,task_id):
+        # request.session['my_error'] = u'Нет права доступа к этой задаче!'
+        # return HttpResponseRedirect("/tasks/")
+    # user = request.user.username
+    # method = request.method
+    # data = 0
+    # time = 0
+    # try:
+        # task_full = task_types[task_type].objects.get(id = task_id)
+    # except:
+        # return HttpResponseRedirect('/tasks/')
+    # if request.method == 'POST':
+        # if 'datepicker' in request.POST:
+            # data = request.POST['datepicker']
+        # if 'time' in request.POST:
+            # time = request.POST['time']
+        # dtt = datetime.datetime(*map(int,([data.strip().split('/')[2],data.strip().split('/')[1],data.strip().split('/')[0]]+time.strip().split(':'))))
+        # task_full.when_to_reminder = dtt
+        # cat_call = Categories.objects.get(name = 'Звонки')
+        # task_full.category = cat_call
+        # task_full.save()
+        # set_last_activity(user,request.path)
+        # return HttpResponseRedirect('/tasks/')
+    # else:
+        # after_hour = str(datetime.datetime.now().hour+1)+":"+str(datetime.datetime.now().minute)
+        # today = str(datetime.datetime.now().day)+"/"+str(datetime.datetime.now().month)+"/"+str(datetime.datetime.now().year)
+    # set_last_activity(user,request.path)
+    # return render_to_response(languages[lang]+'set_reminder.html', {'method':method,'today':today,'after_hour':after_hour},RequestContext(request))
 @login_required    
 def change_language(request,lang,address_to_return):
     request.session['language']=lang
+	
     if not address_to_return:
         return HttpResponseRedirect("/")
     # return HttpResponseRedirect('/')
@@ -572,6 +574,11 @@ def change_language_root(request,lang):
 
 @login_required    
 def register(request):
+    user = request.user.username
+    try:
+        manager = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        manager = FioError()
     lang=select_language(request)
     if request.method == 'POST':
         form = UserCreationFormMY(request.POST)
@@ -588,7 +595,7 @@ def register(request):
             return HttpResponseRedirect("/")
     else:
         form = l_forms[lang]['UserCreationFormMY']()
-    return render_to_response(languages[lang]+"registration/register.html",{'form':form,'path':request.path.replace("/","+")},RequestContext(request))
+    return render_to_response(languages[lang]+"registration/register.html",{'worker':manager,'form':form,'path':request.path.replace("/","+")},RequestContext(request))
 @login_required    
 def profile(request):
     user = request.user.username
@@ -1037,7 +1044,13 @@ def all_clients(request):
                 return find_parent_task(note.parent_note.get())
         except Note.DoesNotExist:
             return Client.objects.filter(note = note)
+    my_error=""
+    clients=""
     user = request.user.username
+    try:
+        fio = Person.objects.get(login=user)
+    except Person.DoesNotExist:
+        fio = FioError
     not_finded = False
     finded_tasks = ''
     method = request.method
@@ -1045,28 +1058,60 @@ def all_clients(request):
         form = ClientSearchForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            find_text = data['name']
+            find_date = str(data['date']).split(' ')[0]
+            Tfilin = False
+            Mezuza = False
+            if find_date:
+                if data['mezuza']:
+                    Mezuza = True
+                if data['tfilin']:
+                    Tfilin = True
+            # raise ImportError
             finded_client_notes=''
             finded_client_names=''
             finded_client_desc=''
-            try:
-                finded_client_names = Client.objects.filter(fio__icontains = data['name'])
-            except:
-                pass
-            try:
-                finded_client_desc = Client.objects.filter(description__icontains = data['name'])
-            except:
-                pass
-            try:
-                notes = Note.objects.filter(note__icontains = data['name'])
-            except:
-                pass
-            for note in notes:
-                finded_client_notes = find_parent_task(note = note)
-            finded_clients = list(chain(finded_client_names, finded_client_desc, finded_client_notes))
+            finded_claims = ''
+            finded_clients = []
+            if find_text:
+                try:
+                    finded_client_names = Client.objects.filter(fio__icontains = data['name'])
+                except:
+                    pass
+                try:
+                    finded_client_desc = Client.objects.filter(description__icontains = data['name'])
+                except:
+                    pass
+                try:
+                    notes = Note.objects.filter(note__icontains = data['name'])
+                except:
+                    pass
+                for note in notes:
+                    finded_client_notes = find_parent_task(note = note)
+                finded_clients = list(chain(finded_client_names, finded_client_desc, finded_client_notes))
+            if find_date:
+                finded_claims_tfilin=""
+                finded_claims_mezuza=""
+                if Mezuza:
+                    try:
+                        finded_claims_mezuza = Claim.objects.filter(date_of_claim__icontains = find_date).filter(mezuza__isnull=False)
+                    except:
+                        pass
+                if Tfilin:
+                    try:
+                        finded_claims_tfilin = Claim.objects.filter(date_of_claim__icontains = find_date).filter(tfilin__isnull=False)
+                    except:
+                        pass
+                finded_claims = list(chain(finded_claims_mezuza, finded_claims_tfilin))    
+                for claim in finded_claims:
+                    try:
+                        finded_clients.append(claim.for_client.get())
+                    except:
+                        pass
             if not finded_clients:
                 not_finded = True
             #set_last_activity(user,request.path)
-            return render_to_response(languages[lang]+'all_tasks.html', {'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
+            return render_to_response(languages[lang]+'all_tasks.html', {'worker':fio,'not_finded':not_finded,'finded_tasks':finded_clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
     else:
         form = l_forms[lang]['ClientSearchForm']()
         if request.session.get('my_error'):
@@ -1078,9 +1123,12 @@ def all_clients(request):
             # отображаем все НЕ закрытые заявки, т.е. процент выполнения которых меньше 100
             clients = Client.objects.filter(deleted = False)
         except:
-            tasks = ''# если задач нет - вывести это в шаблон
+            clients = ''# если задач нет - вывести это в шаблон
+        for client in clients:
+            if client.dr:
+                client.age=(datetime.datetime.now().date()-client.dr).days//365
     #set_last_activity(user,request.path)
-    return render_to_response(languages[lang]+'all_tasks.html', {'my_error':my_error,'tasks':clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
+    return render_to_response(languages[lang]+'all_tasks.html', {'worker':fio,'my_error':my_error,'tasks':clients,'form':form, 'method':method,'path':request.path.replace("/","+")},RequestContext(request))
 @login_required
 def add_children_task(request,parent_task_type,parent_task_id):
     method = request.method

@@ -21,6 +21,7 @@ inp_f=( '%d-%m-%Y %H:%M:%S',     # '2006-10-25 14:30:59'
         '%d/%m/%Y %H:%M:%S',     # '10/25/2006 14:30:59'
         '%d/%m/%Y %H:%M',        # '10/25/2006 14:30'
         '%d/%m/%Y',              # '10/25/2006'
+        '%Y/%m/%d',              # '2010/12/31'
         '%d.%m.%Y %H:%M:%S',     # '10/25/2006 14:30:59'
         '%Y.%m.%d %H:%M:%S',     # '2010/01/26 14:30:59'
         '%d/%m/%y %H:%M:%S',     # '10/25/06 14:30:59'
@@ -79,7 +80,10 @@ class EditClientForm(forms.Form):
             raise forms.ValidationError('Номер телефона слишком длинный') 
         return tel
 class ClientSearchForm(forms.Form):
-    name = forms.CharField(max_length=140, label='Строка для поиска')
+    name = forms.CharField(max_length=140, label='Строка для поиска',required=False)
+    date = forms.DateTimeField(label='Дата покупки',input_formats=inp_f,required=False)
+    mezuza = forms.BooleanField(label='Поиск по мезузам', required=False)
+    tfilin = forms.BooleanField(label='Поиск по тфилинам', required=False)
 class NoteToClientAddForm(forms.Form):
     note = forms.CharField(widget=forms.Textarea, label='Комментарий',required=False )
 class UserCreationFormMY(UserCreationForm):
@@ -145,6 +149,9 @@ class EditClientForm_ENG(forms.Form):
         return tel
 class ClientSearchForm_ENG(forms.Form):
     name = forms.CharField(max_length=140, label='String to search')
+    date = forms.DateTimeField(label='Date of claim',input_formats=inp_f,required=False)
+    mezuza = forms.BooleanField(label='Search for mezuzot', required=False)
+    tfilin = forms.BooleanField(label='Search for tfillins', required=False)
 class NoteToClientAddForm_ENG(forms.Form):
     note = forms.CharField(widget=forms.Textarea, label='Note',required=False )
 class UserCreationFormMY_ENG(UserCreationForm):

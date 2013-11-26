@@ -49,7 +49,7 @@ urlpatterns = patterns('',
     url(r'^undelete/([^/]+)/(\d+)/$', todoes.views.undelete_task),
     url(r'^add_children_task/([^/]+)/(\d+)/$', todoes.views.add_children_task),
     # http://192.168.1.157:8080/move_to_call/47 - изменение категории на "Звонки"
-    url(r'^move_to_call/([^/]+)/(\d+)/$', todoes.views.move_to_call),
+    # url(r'^move_to_call/([^/]+)/(\d+)/$', todoes.views.move_to_call),
     # http://192.168.1.157:8080/set_reminder/47 - установка напоминания для задачи
     url(r'^set_reminder/([^/]+)/(\d+)/$', todoes.views.set_reminder), 
     # Для администратора:

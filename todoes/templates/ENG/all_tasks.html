@@ -18,13 +18,13 @@
        }
 
     </style>
-    <meta http-equiv="refresh" content="60">
 {% endblock %}
 {% block content %}
 	<div style="height:10px"></div>
     <form action="" method="post">
         {% csrf_token %}
         {{ form.as_table }}
+        <input class="button" type="submit" value="Search" name="search">
     </form>
     <hr />
     {# если только открыли #}
@@ -37,11 +37,62 @@
         {% endif %}
         
         {% if tasks %}
+            {% comment %}
                 <ol>
                     {% for task in tasks %}
                         <li><a href="../client/{{task.id}}">{{task.id}};{{task.fio}}</a></li>
                     {% endfor %}
                 </ol>
+            {% endcomment %}
+            
+            <div class="clients">
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>e-mail</th>
+                        <th>Age</th>
+                        <th>Spouse</th>
+                        <th>Address</th>
+                    </tr>
+                    <tr>
+                        <td colspan=7>
+                            <div class="table_header_separator"><hr /></div>
+                        </td>
+                    </tr>
+                    {% for client in tasks %}
+                        <tr>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.id}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.fio}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.tel}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.mail}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.age}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.spouse_fio}}</a>
+                            </td>
+                            <td>
+                                <a href="../client/{{client.id}}">{{client.address}}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan=7>
+                                <div class="table_separator"><hr /></div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
         {% endif %}
     {% endif %}
     
@@ -52,11 +103,61 @@
     
     {# Если найдена задача #}
     {% if not not_finded and finded_tasks %}
-        <ul>
-            {% for task in finded_tasks %}
-                <li><a href="/client/{{task.id}}">{{task.id}};{{task.fio}}</a></li>
-            {% endfor %}
-        </ul>
+        {% comment %}
+            <ul>
+                {% for task in finded_tasks %}
+                    <li><a href="/client/{{task.id}}">{{task.id}};{{task.fio}}</a></li>
+                {% endfor %}
+            </ul>
+        {% endcomment %}
+        <div class="clients">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>e-mail</th>
+                    <th>Age</th>
+                    <th>Spouse</th>
+                    <th>Address</th>
+                </tr>
+                <tr>
+                    <td colspan=7>
+                        <div class="table_header_separator"><hr /></div>
+                    </td>
+                </tr>
+                {% for client in finded_tasks %}
+                    <tr>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.id}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.fio}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.tel}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.mail}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.age}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.spouse_fio}}</a>
+                        </td>
+                        <td>
+                            <a href="../client/{{client.id}}">{{client.address}}</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan=7>
+                            <div class="table_separator"><hr /></div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
     {% endif %}
 
 {% endblock %}

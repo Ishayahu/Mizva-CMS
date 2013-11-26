@@ -1,4 +1,4 @@
-{% extends "RUS/base.html" %}
+{% extends "ENG/base.html" %}
 {% block title %}
 New user
 
@@ -14,5 +14,13 @@ New user
     {{ form.as_p }}
     <input type="submit" value="Register" />
 </form>
+<script>
+    function eng(){
+        $("label[for=id_username]").text("Username")
+        $("label[for=id_password1]").text("Password")
+        $("label[for=id_password2]").text("Repeat password")
+    }
+	$(document).ready(eng);
+</script>
 
 {% endblock %}
